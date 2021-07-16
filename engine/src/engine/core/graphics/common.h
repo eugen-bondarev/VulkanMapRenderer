@@ -11,6 +11,8 @@
 
 #include <string>
 #include <vector>
+#include <array>
+#include <algorithm>
 
 #include <spdlog/spdlog.h>
 
