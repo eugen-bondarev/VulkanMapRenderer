@@ -7,11 +7,14 @@ namespace Engine
 		void Bootstrap()
 		{
 			Global::instance = new Global::Instance();
-			// Global::device = new Global::Device();
+			Global::surface = new Global::Surface();
+			Global::device = new Global::Device();
 		}
 
 		void Shutdown()
 		{
+			delete Global::device;
+			delete Global::surface;
 			delete Global::instance;
 		}
 	}

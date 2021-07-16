@@ -4,6 +4,8 @@
 
 namespace Engine
 {
+	Window* window;
+
 	Window::Window(glm::vec2 size, Mode mode, const std::string& title)
 	{
 		glfwInit();

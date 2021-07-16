@@ -28,4 +28,6 @@ namespace Engine
 		Window(const Window&) = delete;
 		Window& operator=(const Window&) = delete;
 	};
+
+	extern Window* window;
 }

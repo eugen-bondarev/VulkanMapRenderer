@@ -9,12 +9,12 @@
 int main()														\
 {																\
 	using namespace Engine;										\
-	Window window({ 800, 600 }, Window::Mode::Windowed);		\
+	window = new Window({ 800, 600 }, Window::Mode::Windowed); \
 	Vk::Bootstrap();											\
 	App* app = GetApp();										\
 	app->Init();												\
 																\
-	while (!window.ShouldClose())								\
+	while (!window->ShouldClose())								\
 	{															\
 		glfwPollEvents();										\
 		app->Update();											\
