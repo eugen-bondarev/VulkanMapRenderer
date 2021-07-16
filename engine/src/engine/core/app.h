@@ -6,9 +6,11 @@ namespace Engine
 	{
 	public:
 		App() = default;
+		virtual ~App() {}
 
 		virtual void Init() = 0;
 		virtual void Update() = 0;
+		virtual void Shutdown() = 0;
 	};
 
 	extern App* GetApp();

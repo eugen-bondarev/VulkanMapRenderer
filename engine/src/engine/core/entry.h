@@ -13,13 +13,14 @@ int main()														\
 	Vk::Bootstrap();											\
 	App* app = GetApp();										\
 	app->Init();												\
-																\
 	while (!window->ShouldClose())								\
 	{															\
 		glfwPollEvents();										\
 		app->Update();											\
 	}															\
+	app->Shutdown();											\
+	delete app;													\
 	Vk::Shutdown();												\
-																\
+	delete window;												\
 	return 0;													\
 }

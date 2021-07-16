@@ -37,6 +37,7 @@ namespace Engine
 		// 	glm::vec2& size = *(glm::vec2*)glfwGetWindowUserPointer(window);
 		// 	size = { static_cast<float>(w), static_cast<float>(h) };
 		// });
+		TRACE();
 	}
 
 	bool Window::ShouldClose() const
@@ -46,7 +47,7 @@ namespace Engine
 
 	Window::~Window()
 	{
-		std::cout << "Window destroyed.\n";
+		TRACE();
 	}
 
 	GLFWwindow* Window::GetGLFWWindow()

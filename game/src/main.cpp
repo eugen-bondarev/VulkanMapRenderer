@@ -1,23 +1,33 @@
 #include <iostream>
 
-#include <engine/core/window/window.h>
-#include <engine/core/entry.h>
+#include <engine/engine.h>
 
-class NaturaForge : public Engine::App
+using namespace Engine;
+
+class NaturaForge : public App
 {
 public:
 	void Init() override
 	{
-		
+		frameManager = new Vk::FrameManager();
+
+		glm::vec2 viewport_size = { Vk::Global::swapChain->GetExtent().width, Vk::Global::swapChain->GetExtent().height };
 	}
 
 	void Update() override
 	{
-
+		
 	}
+
+	void Shutdown() override
+	{
+		delete frameManager;
+	}
+
+	Vk::FrameManager* frameManager;
 };
 
-Engine::App* Engine::GetApp()
+App* ::Engine::GetApp()
 {
 	return new NaturaForge();
 }

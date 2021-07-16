@@ -13,8 +13,11 @@
 #include <vector>
 #include <array>
 #include <algorithm>
+#include <assert.h>
 
 #include <spdlog/spdlog.h>
+
+#define VK_ASSERT(exp, msg) assert((exp) && msg)
 
 #define LOG_OUT(...)		spdlog::info(__VA_ARGS__)
 #define ERR_OUT(...)		spdlog::error(__VA_ARGS__)
