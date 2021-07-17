@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace Engine
 {
 	namespace Assets
