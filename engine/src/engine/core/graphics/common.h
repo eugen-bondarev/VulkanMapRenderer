@@ -35,3 +35,13 @@
 	{								\
 		THROW(msg);					\
 	}
+
+inline static glm::vec2 ExtentToVec2(VkExtent2D extent)
+{
+	return { extent.width, extent.height };
+}
+
+inline static VkExtent2D ExtentToVec2(glm::vec2 vec)
+{
+	return { static_cast<uint32_t>(vec.x), static_cast<uint32_t>(vec.y) };
+}

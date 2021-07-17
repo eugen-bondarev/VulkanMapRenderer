@@ -22,7 +22,7 @@ namespace Engine
 			void Begin(VkCommandBufferUsageFlags flags = 0) const;
 			void End() const;
 
-			void BeginRenderPass(const RenderPass *render_pass, Framebuffer *framebuffer) const;
+			void BeginRenderPass(RenderPass *render_pass, Framebuffer *framebuffer) const;
 			void EndRenderPass() const;
 
 			void SubmitToQueue(const VkQueue &queue, VkSemaphore *wait_semaphore = nullptr, const VkSemaphore *signal_semaphore = nullptr, VkFence fence = nullptr) const;

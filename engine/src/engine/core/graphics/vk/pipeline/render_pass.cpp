@@ -56,7 +56,7 @@ namespace Engine
 			TRACE();
 		}
 
-		VkRenderPass RenderPass::GetVkRenderPass() const
+		VkRenderPass& RenderPass::GetVkRenderPass()
 		{
 			return vkRenderPass;
 		}

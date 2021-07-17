@@ -11,6 +11,7 @@ target_include_directories(
 	engine PUBLIC 
 	${ENGINE_INCLUDE_DIRS}/engine 
 	${Vulkan_INCLUDE_DIR} 
+	../external/stb_image/include
 	../external/glfw/include 
 	../external/spdlog/include 
 	../external/glm

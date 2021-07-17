@@ -25,17 +25,26 @@ void NaturaForge::Init()
 
 	descriptorSetLayout = new Vk::DescriptorSetLayout(bindings);
 
-	glm::vec2 viewport_size = { Vk::Global::swapChain->GetExtent().width, Vk::Global::swapChain->GetExtent().height };
+	{
+		const Assets::Image map_texture("assets/textures/map.png");
+		uint32_t buffer_size = map_texture.GetSize().x * map_texture.GetSize().y * map_texture.GetAmountOfChannels();
+		Vk::Buffer staging_buffer(map_texture.GetData(), buffer_size);
+
+		image = new Vk::Image(&staging_buffer, map_texture.GetSize(), map_texture.GetAmountOfChannels());
+		imageView = new Vk::ImageView(image);
+		sampler = new Vk::Sampler();
+	}
 
 	Assets::Text vs_code("assets/shaders/default.vert.spv");
 	Assets::Text fs_code("assets/shaders/default.frag.spv");
 
 	scene.pipeline = new Vk::Pipeline(
 		vs_code.GetContent(), fs_code.GetContent(), 
-		viewport_size, Vk::Global::swapChain->GetImageFormat(), 
+		ExtentToVec2(Vk::Global::swapChain->GetExtent()), Vk::Global::swapChain->GetImageFormat(), 
 		Vk::Vertex::GetBindingDescriptions(), Vk::Vertex::GetAttributeDescriptions(),
 		{ descriptorSetLayout->GetVkDescriptorSetLayout() }
 	);
+	scene.pipeline->SetAsOutput();
 
 	{			
 		const std::vector<Vk::Vertex> vertices = 
@@ -89,8 +98,6 @@ void NaturaForge::Init()
 	descriptorSet->Update(write_descriptor_sets);
 
 	imagesInFlight.resize(Vk::Global::swapChain->GetImageViews().size());
-	for (const VkImageView& image_view : Vk::Global::swapChain->GetImageViews())
-		framebuffers.push_back(new Vk::Framebuffer(image_view, scene.pipeline->GetRenderPass()->GetVkRenderPass(), viewport_size));
 }
 
 void NaturaForge::UpdateUBO()
@@ -106,12 +113,12 @@ void NaturaForge::UpdateUBO()
 	scene.ubo.perInstance.buffer->Update(scene.ubo.perInstance.data->model.data);
 }
 
-void NaturaForge::RecordCommandBuffer(Vk::CommandPool* command_pool, Vk::CommandBuffer* cmd, Vk::Framebuffer* framebuffer)
+void NaturaForge::RecordCommandBuffer(Vk::CommandPool* command_pool, Vk::CommandBuffer* cmd)
 {
 	command_pool->Reset();
 
 	cmd->Begin();
-		cmd->BeginRenderPass(scene.pipeline->GetRenderPass(), framebuffer);
+		cmd->BeginRenderPass(scene.pipeline->GetRenderPass(), Vk::Global::swapChain->GetCurrentScreenFramebuffer());
 			cmd->BindPipeline(scene.pipeline);
 				cmd->BindVertexBuffers({ scene.mesh.vertexBuffer }, { 0 });
 				cmd->BindIndexBuffer(scene.mesh.indexBuffer);					
@@ -171,10 +178,9 @@ void NaturaForge::Update()
 
 	Vk::CommandPool* current_command_pool = commandPools[image_index];
 	Vk::CommandBuffer* current_command_buffer = commandBuffers[image_index];	
-	Vk::Framebuffer* current_framebuffer = framebuffers[image_index];
 
 	UpdateUBO();
-	RecordCommandBuffer(current_command_pool, current_command_buffer, current_framebuffer);
+	RecordCommandBuffer(current_command_pool, current_command_buffer);
 	Render(current_command_buffer);
 	Present();
 }
@@ -183,13 +189,13 @@ void NaturaForge::Shutdown()
 {
 	Vk::Global::device->WaitIdle();
 
+	delete sampler;
+	delete imageView;
+	delete image;
 
 	delete descriptorSet;
 	delete descriptorPool;
 	delete descriptorSetLayout;
-
-	for (int i = 0; i < framebuffers.size(); i++)
-		delete framebuffers[i];
 
 	delete scene.ubo.perInstance.data;
 	delete scene.ubo.perScene.buffer;

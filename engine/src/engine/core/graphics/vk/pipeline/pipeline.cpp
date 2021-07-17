@@ -1,6 +1,7 @@
 #include "pipeline.h"
 
 #include "../device/device.h"
+#include "../swap_chain/swap_chain.h"
 
 namespace Engine
 {
@@ -146,6 +147,11 @@ namespace Engine
 			TRACE();
 		}
 
+		void Pipeline::SetAsOutput()
+		{
+			Global::swapChain->InitFramebuffers(renderPass->GetVkRenderPass());
+		}
+
 		VkPipelineLayout Pipeline::GetVkPipelineLayout() const
 		{
 			return vkPipelineLayout;
@@ -156,7 +162,7 @@ namespace Engine
 			return vkPipeline;
 		}
 
-		const RenderPass *Pipeline::GetRenderPass() const
+		RenderPass *Pipeline::GetRenderPass()
 		{
 			return renderPass;
 		}

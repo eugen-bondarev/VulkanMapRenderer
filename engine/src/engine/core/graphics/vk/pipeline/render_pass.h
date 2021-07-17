@@ -14,7 +14,7 @@ namespace Engine
 			RenderPass(VkFormat format);
 			~RenderPass();
 
-			VkRenderPass GetVkRenderPass() const;
+			VkRenderPass& GetVkRenderPass();
 
 		private:
 			VkRenderPass vkRenderPass;

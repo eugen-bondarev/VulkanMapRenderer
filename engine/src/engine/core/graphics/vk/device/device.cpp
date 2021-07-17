@@ -103,16 +103,19 @@ namespace Engine
 			{
 				Queues::indices = Queues::FindQueueFamilies(device);
 
-				bool extensionsSupported = CheckDeviceExtensionSupport(device);
-				bool swapChainAdequate = false;
+				bool extensions_supported = CheckDeviceExtensionSupport(device);
+				bool swap_chain_adequate = false;
 
-				if (extensionsSupported)
+				if (extensions_supported)
 				{
-					SupportDetails swapChainSupportDetails = QuerySwapChainSupport(device);
-					swapChainAdequate = !swapChainSupportDetails.formats.empty() && !swapChainSupportDetails.presentModes.empty();
+					SupportDetails swap_chain_support_details = QuerySwapChainSupport(device);
+					swap_chain_adequate = !swap_chain_support_details.formats.empty() && !swap_chain_support_details.presentModes.empty();
 				}
 
-				return Queues::indices.IsComplete() && swapChainAdequate;
+				VkPhysicalDeviceFeatures supported_features;
+				vkGetPhysicalDeviceFeatures(device, &supported_features);
+
+				return Queues::indices.IsComplete() && swap_chain_adequate && supported_features.samplerAnisotropy;
 			}
 
 			void Device::CreateLogicalDevice()
@@ -135,6 +138,7 @@ namespace Engine
 				}
 
 				VkPhysicalDeviceFeatures device_features{};
+				device_features.samplerAnisotropy = VK_TRUE;
 
 				VkDeviceCreateInfo create_info{};
 				create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

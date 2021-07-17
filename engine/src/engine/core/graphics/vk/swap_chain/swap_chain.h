@@ -2,6 +2,8 @@
 
 #include "../../common.h"
 
+#include "../framebuffer/framebuffer.h"
+
 namespace Engine
 {
 	namespace Vk
@@ -25,11 +27,16 @@ namespace Engine
 				VkSurfaceFormatKHR GetSurfaceFormat() const;
 				VkExtent2D GetExtent() const;
 
+				void InitFramebuffers(VkRenderPass& render_pass);
+				Vk::Framebuffer* GetCurrentScreenFramebuffer();
+
 				const std::vector<VkImage> &GetImages() const;
 				const std::vector<VkImageView> &GetImageViews() const;
 
 			private:
 				uint32_t imageIndex;
+
+				std::vector<Vk::Framebuffer*> framebuffers;
 
 				VkSwapchainKHR vkSwapChain;
 

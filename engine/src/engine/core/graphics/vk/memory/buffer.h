@@ -36,6 +36,16 @@ namespace Engine
 				
 			}
 
+			Buffer(
+				const void* data,
+				uint32_t size,
+				VkBufferUsageFlags usage_flags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				VkMemoryPropertyFlags property_flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+			) : Buffer(size, 1, data, usage_flags, property_flags)
+			{
+				
+			}
+
 			Buffer(Buffer* buffer, VkBufferUsageFlags usage_flags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 			~Buffer();
 

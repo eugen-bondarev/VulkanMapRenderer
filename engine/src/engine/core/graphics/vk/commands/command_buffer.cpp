@@ -67,7 +67,7 @@ namespace Engine
 			VK_CHECK(vkQueueSubmit(queue, 1, &submit_info, fence), "Failed to submit queue.");
 		}
 
-		void CommandBuffer::BeginRenderPass(const RenderPass *render_pass, Framebuffer *framebuffer) const
+		void CommandBuffer::BeginRenderPass(RenderPass *render_pass, Framebuffer *framebuffer) const
 		{
 			VkRenderPassBeginInfo submit_info = {};
 			submit_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

@@ -82,7 +82,22 @@ namespace Engine
 
 				vkDestroySwapchainKHR(device->GetVkDevice(), vkSwapChain, nullptr);
 
+				for (auto& framebuffer : framebuffers)
+					delete framebuffer;
+
 				TRACE();
+			}
+
+			Vk::Framebuffer* SwapChain::GetCurrentScreenFramebuffer()
+			{
+				return framebuffers[imageIndex];
+			}
+
+			void SwapChain::InitFramebuffers(VkRenderPass& render_pass)
+			{				
+				glm::vec2 viewport_size = { extent.width, extent.height };
+				for (const VkImageView& image_view : Vk::Global::swapChain->GetImageViews())
+					framebuffers.push_back(new Vk::Framebuffer(image_view, render_pass, viewport_size));
 			}
 
 			uint32_t SwapChain::AcquireImage(VkSemaphore semaphore)

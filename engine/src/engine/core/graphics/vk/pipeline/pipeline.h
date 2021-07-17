@@ -11,9 +11,6 @@ namespace Engine
 {
 	namespace Vk
 	{
-		// std::vector<VkVertexInputBindingDescription>
-		// std::vector<VkVertexInputAttributeDescription>
-
 		using BindingDescriptions = std::vector<VkVertexInputBindingDescription>;
 		using AttributeDescriptions = std::vector<VkVertexInputAttributeDescription>;
 		using SetLayouts = std::vector<VkDescriptorSetLayout>;
@@ -32,9 +29,11 @@ namespace Engine
 
 			~Pipeline();
 
+			void SetAsOutput();
+
 			VkPipelineLayout GetVkPipelineLayout() const;
 			VkPipeline GetVkPipeline() const;
-			const RenderPass *GetRenderPass() const;
+			RenderPass *GetRenderPass();
 
 		private:
 			Shader *shader;

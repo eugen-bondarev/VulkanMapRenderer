@@ -2,6 +2,7 @@
 
 #include "assets/assets.h"
 #include "assets/text_asset.h"
+#include "assets/image_asset.h"
 
 #include "core/window/window.h"
 #include "core/entry.h"
@@ -21,5 +22,8 @@
 #include "core/graphics/vk/commands/command_buffer.h"
 
 #include "core/graphics/vk/memory/buffer.h"
+#include "core/graphics/vk/image/image.h"
+#include "core/graphics/vk/image/image_view.h"
+#include "core/graphics/vk/image/sampler.h"
 
 #include "core/graphics/vk/pipeline/pipeline.h"

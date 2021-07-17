@@ -26,7 +26,7 @@ public:
 
 	void Init() override;
 	void UpdateUBO();
-	void RecordCommandBuffer(Vk::CommandPool* command_pool, Vk::CommandBuffer* cmd, Vk::Framebuffer* framebuffer);
+	void RecordCommandBuffer(Vk::CommandPool* command_pool, Vk::CommandBuffer* cmd);
 	void Render(Vk::CommandBuffer* cmd);
 	void Present();
 	void Update() override;
@@ -36,7 +36,6 @@ public:
 	std::vector<Vk::CommandPool*> commandPools;
 	std::vector<Vk::CommandBuffer*> commandBuffers;
 	std::vector<VkFence> imagesInFlight;
-	std::vector<Vk::Framebuffer*> framebuffers;
 
 	struct
 	{
@@ -64,12 +63,14 @@ public:
 		Vk::Pipeline* pipeline;		
 	} scene;
 
+	Vk::Image* image;
+	Vk::ImageView* imageView;
+	Vk::Sampler* sampler;
+
 	Vk::DescriptorPool* descriptorPool;
 
 	Vk::DescriptorSetLayout* descriptorSetLayout;
 	Vk::DescriptorSet* descriptorSet;
-
-
 };
 
 App* ::Engine::GetApp()
