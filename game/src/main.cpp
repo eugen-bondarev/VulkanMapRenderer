@@ -20,7 +20,8 @@ void NaturaForge::Init()
 	std::vector<VkDescriptorSetLayoutBinding> bindings = 
 	{
 		Vk::CreateBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
-		Vk::CreateBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC)
+		Vk::CreateBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC),
+		Vk::CreateBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 	};
 
 	descriptorSetLayout = new Vk::DescriptorSetLayout(bindings);
@@ -49,10 +50,10 @@ void NaturaForge::Init()
 	{			
 		const std::vector<Vk::Vertex> vertices = 
 		{
-			{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-			{{ 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-			{{ 0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}},
-			{{-0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}}
+			{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+			{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+			{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+			{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
 		};
 
 		Vk::Buffer staging_buffer(vertices);
@@ -70,7 +71,8 @@ void NaturaForge::Init()
 
 	descriptorPool = new Vk::DescriptorPool({
 		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 }
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 }
 	});
 
 	scene.ubo.perScene.buffer = new Vk::Buffer(
@@ -89,10 +91,27 @@ void NaturaForge::Init()
 	scene.ubo.perInstance.buffer->SetDescriptor(Aligned<glm::mat4x4>::dynamicAlignment);
 
 	descriptorSet = new Vk::DescriptorSet(descriptorPool, { descriptorSetLayout->GetVkDescriptorSetLayout() });
+
+	VkWriteDescriptorSet image_write_descriptor_set = {};
+
+    VkDescriptorImageInfo image_info{};
+    image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    image_info.imageView = imageView->GetVkImageView();
+    image_info.sampler = sampler->GetVkSampler();
+
+	image_write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	image_write_descriptor_set.dstSet = descriptorSet->GetVkDescriptorSet();
+	image_write_descriptor_set.dstBinding = 2;
+	image_write_descriptor_set.dstArrayElement = 0;
+	image_write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	image_write_descriptor_set.descriptorCount = 1;
+	image_write_descriptor_set.pImageInfo = &image_info;
+
 	std::vector<VkWriteDescriptorSet> write_descriptor_sets = 
 	{
 		Vk::CreateWriteDescriptorSet(descriptorSet, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &scene.ubo.perScene.buffer->GetDescriptor()),
-		Vk::CreateWriteDescriptorSet(descriptorSet, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, &scene.ubo.perInstance.buffer->GetDescriptor())
+		Vk::CreateWriteDescriptorSet(descriptorSet, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, &scene.ubo.perInstance.buffer->GetDescriptor()),
+		image_write_descriptor_set
 	};
 
 	descriptorSet->Update(write_descriptor_sets);

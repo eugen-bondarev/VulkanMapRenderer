@@ -37,5 +37,10 @@ namespace Engine
     		vkDestroySampler(Global::device->GetVkDevice(), vkSampler, nullptr);
 			TRACE();
 		}
+
+		VkSampler& Sampler::GetVkSampler()
+		{
+			return vkSampler;
+		}
 	}
 }
