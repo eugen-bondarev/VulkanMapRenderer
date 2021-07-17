@@ -10,43 +10,11 @@ struct UBOScene
 	glm::mat4x4 projection;
 };
 
-template <typename T>
-struct Aligned
-{
-	T* data;
-
-	size_t alignment;
-
-	Aligned(size_t size, size_t alignment) : alignment { alignment }
-	{
-		data = Util::Mem::Aligned::Alloc<T>(size, alignment);
-	}
-
-	~Aligned()
-	{
-		Util::Mem::Aligned::Free(data);
-	}
-
-	T& operator[](int i)
-	{		
-		T& item = *(T*)(((uint64_t)data + (i * alignment)));
-
-		return item;
-	}
-
-	const T& operator[](int i) const
-	{		
-		T& item = *(T*)(((uint64_t)data + (i * alignment)));
-
-		return item;
-	}
-};
-
 struct UBOInstance
 {
 	Aligned<glm::mat4x4> model;
 
-	UBOInstance(size_t size, size_t alignment) : model { size, alignment }
+	UBOInstance(uint32_t amount_of_instances) : model { amount_of_instances }
 	{
 
 	}
@@ -58,28 +26,15 @@ public:
 	UBOScene uboScene;
 	UBOInstance* uboInstance;
 
-	uint32_t dynamicAlignment;
-
-	int amountOfInstances = 3;
+	int amountOfInstances = 4;
 
 	void Init() override
 	{
-		int w, h;
-		glfwGetFramebufferSize(window->GetGLFWWindow(), &w, &h);
-
 		uboScene.view = glm::mat4x4(1);
-		uboScene.projection = glm::perspective(glm::radians(70.0f), static_cast<float>(w) / static_cast<float>(h), 0.1f, 1000.0f);
+		uboScene.projection = glm::perspective(glm::radians(70.0f), window->GetSize().x / window->GetSize().y, 0.1f, 1000.0f);
 
-		// size_t minUboAlignment = vulkanDevice->properties.limits.minUniformBufferOffsetAlignment;
-		size_t minUboAlignment = Vk::Global::device->properties.limits.minUniformBufferOffsetAlignment;
-		dynamicAlignment = sizeof(glm::mat4x4);
-		if (minUboAlignment > 0) 
-		{
-			dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
-		}
-		size_t bufferSize = amountOfInstances * dynamicAlignment;
-
-		uboInstance = new UBOInstance(bufferSize, dynamicAlignment);
+		uboInstance = new UBOInstance(amountOfInstances);
+		size_t buffer_size = amountOfInstances * Aligned<glm::mat4x4>::dynamicAlignment;
 
 		frameManager = new Vk::FrameManager();
 
@@ -119,7 +74,7 @@ public:
 				{{-0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}}
 			};
 
-			Vk::Buffer staging_buffer(sizeof(Vk::Vertex), static_cast<uint32_t>(vertices.size()), vertices.data());
+			Vk::Buffer staging_buffer(vertices);
 			mesh.vertexBuffer = new Vk::Buffer(&staging_buffer);
 		}
 		{
@@ -128,7 +83,7 @@ public:
 				0, 1, 2, 2, 3, 0
 			};
 
-			Vk::Buffer staging_buffer(sizeof(uint16_t), static_cast<uint32_t>(indices.size()), indices.data());
+			Vk::Buffer staging_buffer(indices);
 			mesh.indexBuffer = new Vk::Buffer(&staging_buffer, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 		}
 
@@ -145,47 +100,25 @@ public:
 		);
 
 		uboInstanceBuffer = new Vk::Buffer(
-			bufferSize,
+			buffer_size,
 			1,
 			uboInstance->model.data,
 			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
 		);
-
-		auto& dyn = uboInstanceBuffer->GetDescriptor();
-		dyn.range = uboInstanceBuffer->GetSize() - dynamicAlignment * (amountOfInstances - 1);
+		uboInstanceBuffer->SetDescriptor(Aligned<glm::mat4x4>::dynamicAlignment);
 
 		descriptorSet = new Vk::DescriptorSet(descriptorPool, { descriptorSetLayout->GetVkDescriptorSetLayout() });
 		std::vector<VkWriteDescriptorSet> write_descriptor_sets = 
 		{
 			Vk::CreateWriteDescriptorSet(descriptorSet, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &uboSceneBuffer->GetDescriptor()),
-			Vk::CreateWriteDescriptorSet(descriptorSet, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, &dyn)
+			Vk::CreateWriteDescriptorSet(descriptorSet, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, &uboInstanceBuffer->GetDescriptor())
 		};
+
 		descriptorSet->Update(write_descriptor_sets);
 
 		imagesInFlight.resize(Vk::Global::swapChain->GetImageViews().size());
 		for (const VkImageView& image_view : Vk::Global::swapChain->GetImageViews())
 			framebuffers.push_back(new Vk::Framebuffer(image_view, pipeline->GetRenderPass()->GetVkRenderPass(), viewport_size));
-	}
-
-	void RecordCommandBuffer(Vk::CommandPool* command_pool, Vk::CommandBuffer* cmd, Vk::Framebuffer* framebuffer)
-	{
-		command_pool->Reset();
-
-		cmd->Begin();
-			cmd->BeginRenderPass(pipeline->GetRenderPass(), framebuffer);
-				cmd->BindPipeline(pipeline);
-					cmd->BindVertexBuffers({ mesh.vertexBuffer }, { 0 });
-					cmd->BindIndexBuffer(mesh.indexBuffer);
-					
-						for (int i = 0; i < amountOfInstances; i++)
-						{
-							uint32_t dynamicOffset = i * static_cast<uint32_t>(dynamicAlignment);
-							cmd->BindDescriptorSets(pipeline, 1, &descriptorSet->GetVkDescriptorSet(), 1, &dynamicOffset);							
-							cmd->DrawIndexed(mesh.indexBuffer->GetAmountOfElements(), 1, 0, 0, 0);
-						}
-
-			cmd->EndRenderPass();
-		cmd->End();
 	}
 
 	void UpdateUBO()
@@ -196,8 +129,58 @@ public:
 		uboInstance->model[0] = glm::translate(glm::mat4x4(1), glm::vec3(0 + alpha, 0, -10));
 		uboInstance->model[1] = glm::translate(glm::mat4x4(1), glm::vec3(0 - alpha, 0, -10));
 		uboInstance->model[2] = glm::translate(glm::mat4x4(1), glm::vec3(0, 0 - alpha, -10));
+		uboInstance->model[3] = glm::translate(glm::mat4x4(1), glm::vec3(0, 0 + alpha, -10));
 
 		uboInstanceBuffer->Update(uboInstance->model.data);
+	}
+
+	void RecordCommandBuffer(Vk::CommandPool* command_pool, Vk::CommandBuffer* cmd, Vk::Framebuffer* framebuffer)
+	{
+		command_pool->Reset();
+
+		cmd->Begin();
+			cmd->BeginRenderPass(pipeline->GetRenderPass(), framebuffer);
+				cmd->BindPipeline(pipeline);
+					cmd->BindVertexBuffers({ mesh.vertexBuffer }, { 0 });
+					cmd->BindIndexBuffer(mesh.indexBuffer);					
+						for (int i = 0; i < amountOfInstances; i++)
+						{
+							uint32_t dynamic_offset = i * Aligned<glm::mat4x4>::dynamicAlignment;
+							cmd->BindDescriptorSets(pipeline, 1, &descriptorSet->GetVkDescriptorSet(), 1, &dynamic_offset);							
+							cmd->DrawIndexed(mesh.indexBuffer->GetAmountOfElements(), 1, 0, 0, 0);
+						}
+			cmd->EndRenderPass();
+		cmd->End();
+	}
+
+	void Render(Vk::CommandBuffer* cmd)
+	{		
+		Vk::Frame* current_frame = frameManager->GetCurrentFrame();
+
+		vkResetFences(Vk::Global::device->GetVkDevice(), 1, &current_frame->GetInFlightFence());
+
+		cmd->SubmitToQueue(
+			Vk::Global::Queues::graphicsQueue, 
+			&current_frame->GetImageAvailableSemaphore(), 
+			&current_frame->GetRenderFinishedSemaphore(), 
+			current_frame->GetInFlightFence()
+		);
+	}
+
+	void Present()
+	{
+		VkResult result = Vk::Global::swapChain->Present(&frameManager->GetCurrentFrame()->GetRenderFinishedSemaphore(), 1);
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) 
+		{
+			
+		} 
+		else if (result != VK_SUCCESS) 
+		{
+			THROW("Can't present.");
+		}
+
+		frameManager->NextFrame();
 	}
 
 	void Update() override
@@ -219,30 +202,9 @@ public:
 		Vk::Framebuffer* current_framebuffer = framebuffers[image_index];
 
 		UpdateUBO();
-
 		RecordCommandBuffer(current_command_pool, current_command_buffer, current_framebuffer);
-		
-		vkResetFences(Vk::Global::device->GetVkDevice(), 1, &current_frame->GetInFlightFence());
-
-		current_command_buffer->SubmitToQueue(
-			Vk::Global::Queues::graphicsQueue, 
-			&current_frame->GetImageAvailableSemaphore(), 
-			&current_frame->GetRenderFinishedSemaphore(), 
-			current_frame->GetInFlightFence()
-		);
-
-		VkResult result = Vk::Global::swapChain->Present(&frameManager->GetCurrentFrame()->GetRenderFinishedSemaphore(), 1);
-
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) 
-		{
-			
-		} 
-		else if (result != VK_SUCCESS) 
-		{
-			THROW("Can't present.");
-		}
-
-		frameManager->NextFrame();
+		Render(current_command_buffer);
+		Present();
 	}
 
 	void Shutdown() override

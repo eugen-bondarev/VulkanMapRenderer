@@ -69,6 +69,7 @@ namespace Engine
 						vkPhysicalDevice = device;
 
 						vkGetPhysicalDeviceProperties(vkPhysicalDevice, &properties);
+						Util::Mem::Aligned::minUniformBufferOffsetAlignment = properties.limits.minUniformBufferOffsetAlignment;
 
 						break;
 					}

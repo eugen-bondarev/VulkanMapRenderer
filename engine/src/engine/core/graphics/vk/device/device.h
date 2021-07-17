@@ -33,8 +33,18 @@ namespace Engine
 				VkPhysicalDevice GetVkPhysicalDevice() const;
 				VkDevice GetVkDevice() const;
 
-				// VkPhysicalDeviceLimits limits;
 				VkPhysicalDeviceProperties properties;
+
+				template <typename T>
+				size_t CalculateDynamicAlignment()
+				{
+					if (properties.limits.minUniformBufferOffsetAlignment > 0) 
+					{
+						return (sizeof(T) + properties.limits.minUniformBufferOffsetAlignment - 1) & ~(properties.limits.minUniformBufferOffsetAlignment - 1);
+					}
+
+					return sizeof(T);
+				}
 
 			private:
 				VkPhysicalDevice vkPhysicalDevice;

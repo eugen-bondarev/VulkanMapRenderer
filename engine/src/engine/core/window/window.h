@@ -19,11 +19,14 @@ namespace Engine
 		~Window();
 
 		bool ShouldClose() const;
+		glm::vec2 GetSize() const;
 
 		GLFWwindow* GetGLFWWindow();
 
 	private:
 		GLFWwindow* glfwWindow;
+
+		glm::vec2 size;
 
 		Window(const Window&) = delete;
 		Window& operator=(const Window&) = delete;

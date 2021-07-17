@@ -25,24 +25,29 @@ namespace Engine
 
 		glfwWindow = glfwCreateWindow(size.x, size.y, "Vulkan Tutorial", (mode == Mode::Borderless || mode == Mode::Fullscreen) ? monitor : nullptr, nullptr);
 
-		// int w, h;
-		// glfwGetFramebufferSize(glfwWindow, &w, &h);
-		// size = { static_cast<float>(w), static_cast<float>(h) };
-		// lastSize = size;
+		int w, h;
+		glfwGetFramebufferSize(glfwWindow, &w, &h);
+		this->size = { static_cast<float>(w), static_cast<float>(h) };
 
-		// glfwSetWindowUserPointer(glfwWindow, &size);
+		glfwSetWindowUserPointer(glfwWindow, &this->size);
 
-		// glfwSetWindowSizeCallback(glfwWindow, [](GLFWwindow* window, int w, int h) 
-		// {
-		// 	glm::vec2& size = *(glm::vec2*)glfwGetWindowUserPointer(window);
-		// 	size = { static_cast<float>(w), static_cast<float>(h) };
-		// });
+		glfwSetWindowSizeCallback(glfwWindow, [](GLFWwindow* window, int w, int h) 
+		{
+			glm::vec2& size = *(glm::vec2*)glfwGetWindowUserPointer(window);
+			size = { static_cast<float>(w), static_cast<float>(h) };
+		});
+
 		TRACE();
 	}
 
 	bool Window::ShouldClose() const
 	{
 		return glfwWindowShouldClose(glfwWindow);
+	}
+
+	glm::vec2 Window::GetSize() const
+	{
+		return size;
 	}
 
 	Window::~Window()

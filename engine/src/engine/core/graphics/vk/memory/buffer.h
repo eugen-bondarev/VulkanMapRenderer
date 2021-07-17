@@ -25,6 +25,17 @@ namespace Engine
 				VkBufferUsageFlags usage_flags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 				VkMemoryPropertyFlags property_flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 			);
+			
+			template <typename T>
+			Buffer(
+				const std::vector<T>& vector, 
+				VkBufferUsageFlags usage_flags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				VkMemoryPropertyFlags property_flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+			) : Buffer(sizeof(T), static_cast<uint32_t>(vector.size()), vector.data(), usage_flags, property_flags)
+			{
+				
+			}
+
 			Buffer(Buffer* buffer, VkBufferUsageFlags usage_flags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 			~Buffer();
 
@@ -38,6 +49,7 @@ namespace Engine
 			VkDeviceMemory& GetVkMemory();
 
 			VkDescriptorBufferInfo& GetDescriptor();
+			void SetDescriptor(VkDeviceSize range, VkDeviceSize offset = 0);
 
 		private:
 			VkBuffer vkBuffer;

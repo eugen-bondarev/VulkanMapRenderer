@@ -40,6 +40,12 @@ namespace Engine
 			descriptor.range = VK_WHOLE_SIZE;
 		}
 
+		void Buffer::SetDescriptor(VkDeviceSize range, VkDeviceSize offset)
+		{
+			descriptor.offset = offset;
+			descriptor.range = range;
+		}
+
 		Buffer::Buffer(uint32_t size_of_element, uint32_t amount_of_elements, const void* data, VkBufferUsageFlags usage_flags, VkMemoryPropertyFlags property_flags) : sizeOfElement { size_of_element }, amountOfElements { amount_of_elements }
 		{
 			VkDeviceSize buffer_size = size_of_element * amount_of_elements;

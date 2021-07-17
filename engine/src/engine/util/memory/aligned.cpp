@@ -8,6 +8,8 @@ namespace Engine
 		{
 			namespace Aligned
 			{
+				uint32_t minUniformBufferOffsetAlignment;
+
 				void Free(void *data)
 				{
 #if defined(_MSC_VER) || defined(__MINGW32__)
