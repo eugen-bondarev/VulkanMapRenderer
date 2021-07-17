@@ -33,6 +33,13 @@ namespace Engine
 			}
 		}
 
+		void Buffer::SetupDefaultDescriptor()
+		{
+			descriptor.buffer = vkBuffer;
+			descriptor.offset = 0;
+			descriptor.range = VK_WHOLE_SIZE;
+		}
+
 		Buffer::Buffer(uint32_t size_of_element, uint32_t amount_of_elements, const void* data, VkBufferUsageFlags usage_flags, VkMemoryPropertyFlags property_flags) : sizeOfElement { size_of_element }, amountOfElements { amount_of_elements }
 		{
 			VkDeviceSize buffer_size = size_of_element * amount_of_elements;
@@ -45,10 +52,15 @@ namespace Engine
 				vkMemory
 			);
 
-			void* mapped_data;
-			vkMapMemory(Global::device->GetVkDevice(), vkMemory, 0, buffer_size, 0, &mapped_data);
-				memcpy(mapped_data, data, static_cast<size_t>(buffer_size));
-			vkUnmapMemory(Global::device->GetVkDevice(), vkMemory);
+			if (data != nullptr)
+			{
+				void* mapped_data;
+				vkMapMemory(Global::device->GetVkDevice(), vkMemory, 0, buffer_size, 0, &mapped_data);
+					memcpy(mapped_data, data, static_cast<size_t>(buffer_size));
+				vkUnmapMemory(Global::device->GetVkDevice(), vkMemory);
+			}
+
+			SetupDefaultDescriptor();
 		}
 
 		Buffer::Buffer(Buffer* buffer, VkBufferUsageFlags usage_flags)
@@ -72,6 +84,8 @@ namespace Engine
 				command_buffer.End();
 			command_buffer.SubmitToQueue(Global::Queues::graphicsQueue);
 			Global::device->WaitIdle();
+
+			SetupDefaultDescriptor();
 		}
 
 		void Buffer::Update(const void* data) const
@@ -96,6 +110,11 @@ namespace Engine
 		VkDeviceMemory& Buffer::GetVkMemory()
 		{
 			return vkMemory;
+		}
+
+		VkDescriptorBufferInfo& Buffer::GetDescriptor()
+		{
+			return descriptor;
 		}
 
 		uint32_t Buffer::GetSize() const

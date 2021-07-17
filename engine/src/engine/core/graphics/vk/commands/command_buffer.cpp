@@ -92,7 +92,7 @@ namespace Engine
 
 		void CommandBuffer::BindVertexBuffers(const std::vector<Buffer *> &buffers, const std::vector<VkDeviceSize> &offsets) const
 		{
-			VK_ASSERT(buffers.size() == offsets.size(), "These values must be equal.");
+			VK_ASSERT(buffers.size() == offsets.size());
 
 			std::vector<VkBuffer> vkBuffers(buffers.size());
 			for (int i = 0; i < buffers.size(); i++)
@@ -111,13 +111,13 @@ namespace Engine
 			vkCmdBindIndexBuffer(vkCommandBuffer, index_buffer->GetVkBuffer(), 0, index_type);
 		}
 
-		void CommandBuffer::BindDescriptorSets(const Pipeline *pipeline, VkDescriptorSet *descriptor_sets, uint32_t amount_of_descriptor_sets) const
+		void CommandBuffer::BindDescriptorSets(const Pipeline *pipeline, uint32_t amount_of_descriptor_sets, VkDescriptorSet *descriptor_sets, uint32_t amount_of_offsets, uint32_t* offsets) const
 		{
 			vkCmdBindDescriptorSets(
 				vkCommandBuffer,
 				VK_PIPELINE_BIND_POINT_GRAPHICS,
 				pipeline->GetVkPipelineLayout(), 0,
-				amount_of_descriptor_sets, descriptor_sets, 0, nullptr);
+				amount_of_descriptor_sets, descriptor_sets, amount_of_offsets, offsets);
 		}
 
 		void CommandBuffer::Free() const

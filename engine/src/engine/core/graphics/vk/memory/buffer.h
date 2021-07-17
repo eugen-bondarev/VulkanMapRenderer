@@ -37,9 +37,14 @@ namespace Engine
 			VkBuffer& GetVkBuffer();
 			VkDeviceMemory& GetVkMemory();
 
+			VkDescriptorBufferInfo& GetDescriptor();
+
 		private:
 			VkBuffer vkBuffer;
 			VkDeviceMemory vkMemory;
+
+			VkDescriptorBufferInfo descriptor;
+			void SetupDefaultDescriptor();
 
 			uint32_t sizeOfElement;
 			uint32_t amountOfElements;

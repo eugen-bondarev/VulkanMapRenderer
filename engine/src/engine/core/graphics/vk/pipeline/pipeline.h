@@ -5,6 +5,8 @@
 #include "shader.h"
 #include "render_pass.h"
 
+#include "vertex_layouts/layouts.h"
+
 namespace Engine
 {
 	namespace Vk
