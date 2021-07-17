@@ -79,13 +79,13 @@ namespace Engine
 
 			color_blend_attachment.blendEnable = VK_TRUE;
 
-			color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;  // Optional
-			color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA; // Optional
-			color_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;			   // Optional
+			color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;  				// Optional
+			color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA; 		// Optional
+			color_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;			   						// Optional
 
-			color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;  // Optional
-			color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA; // Optional
-			color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;			   // Optional
+			color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;  				// Optional
+			color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA; 		// Optional
+			color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;			   						// Optional
 
 			VkPipelineColorBlendStateCreateInfo color_blending{};
 			color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;

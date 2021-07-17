@@ -3,6 +3,7 @@
 #include "app.h"
 
 #include "window/window.h"
+#include "window/time.h"
 #include "graphics/vk/vk.h"
 #include "../assets/assets.h"
 
@@ -17,8 +18,10 @@ int main(int amount_of_arguments, char* arguments[])			\
 	app->Init();												\
 	while (!window->ShouldClose())								\
 	{															\
+		Time::BeginMeasurement();								\
 		glfwPollEvents();										\
 		app->Update();											\
+		Time::EndMeasurement();									\
 	}															\
 	app->Shutdown();											\
 	delete app;													\

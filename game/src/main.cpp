@@ -182,7 +182,7 @@ void NaturaForge::Present()
 }
 
 void NaturaForge::Update()
-{		
+{
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
 
 	uint32_t image_index = Vk::Global::swapChain->AcquireImage(current_frame->GetImageAvailableSemaphore());
@@ -202,6 +202,15 @@ void NaturaForge::Update()
 	RecordCommandBuffer(current_command_pool, current_command_buffer);
 	Render(current_command_buffer);
 	Present();
+
+	static float timer = 0.0f;
+	timer += Time::deltaTime;
+	
+	if (timer >= 1.0f)
+	{
+		LOG_OUT("FPS: {0}", Time::GetFPS());
+		timer = 0.0f;
+	}
 }
 
 void NaturaForge::Shutdown()
