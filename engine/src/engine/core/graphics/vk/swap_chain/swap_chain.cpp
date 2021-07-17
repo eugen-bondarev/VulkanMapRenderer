@@ -18,7 +18,7 @@ namespace Engine
 				SupportDetails support_details = QuerySwapChainSupport(device->GetVkPhysicalDevice());
 
 				surfaceFormat = ChooseSurfaceFormat(support_details.formats);
-				surfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
+				// surfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
 				presentMode = ChoosePresentMode(support_details.presentModes);
 				extent = ChooseExtent(support_details.capabilities);
 
