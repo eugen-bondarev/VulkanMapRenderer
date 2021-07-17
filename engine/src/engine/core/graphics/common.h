@@ -17,6 +17,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include "../../util/memory/aligned.h"
+
 #define VK_ASSERT(exp) assert((exp))
 
 #define LOG_OUT(...)		spdlog::info(__VA_ARGS__)

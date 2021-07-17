@@ -10,40 +10,53 @@ struct UBOScene
 	glm::mat4x4 projection;
 };
 
-struct UBOInstance
+template <typename T>
+struct Aligned
 {
-	glm::mat4x4* model;
+	T* data;
+
+	size_t alignment;
+
+	Aligned(size_t size, size_t alignment) : alignment { alignment }
+	{
+		data = Util::Mem::Aligned::Alloc<T>(size, alignment);
+	}
+
+	~Aligned()
+	{
+		Util::Mem::Aligned::Free(data);
+	}
+
+	T& operator[](int i)
+	{		
+		T& item = *(T*)(((uint64_t)data + (i * alignment)));
+
+		return item;
+	}
+
+	const T& operator[](int i) const
+	{		
+		T& item = *(T*)(((uint64_t)data + (i * alignment)));
+
+		return item;
+	}
 };
 
-// Wrapper functions for aligned memory allocation
-// There is currently no standard for this in C++ that works across all platforms and vendors, so we abstract this
-void* alignedAlloc(size_t size, size_t alignment)
+struct UBOInstance
 {
-	void *data = nullptr;
-#if defined(_MSC_VER) || defined(__MINGW32__)
-	data = _aligned_malloc(size, alignment);
-#else
-	int res = posix_memalign(&data, alignment, size);
-	if (res != 0)
-		data = nullptr;
-#endif
-	return data;
-}
+	Aligned<glm::mat4x4> model;
 
-void alignedFree(void* data)
-{
-#if	defined(_MSC_VER) || defined(__MINGW32__)
-	_aligned_free(data);
-#else
-	free(data);
-#endif
-}
+	UBOInstance(size_t size, size_t alignment) : model { size, alignment }
+	{
+
+	}
+};
 
 class NaturaForge : public App
 {
 public:
 	UBOScene uboScene;
-	UBOInstance uboInstance;
+	UBOInstance* uboInstance;
 
 	uint32_t dynamicAlignment;
 
@@ -66,8 +79,7 @@ public:
 		}
 		size_t bufferSize = amountOfInstances * dynamicAlignment;
 
-		// uboInstance.model = new glm::mat4x4(1);
-		uboInstance.model = (glm::mat4x4*) alignedAlloc(bufferSize, dynamicAlignment);
+		uboInstance = new UBOInstance(bufferSize, dynamicAlignment);
 
 		frameManager = new Vk::FrameManager();
 
@@ -135,7 +147,7 @@ public:
 		uboInstanceBuffer = new Vk::Buffer(
 			bufferSize,
 			1,
-			uboInstance.model,
+			uboInstance->model.data,
 			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
 		);
 
@@ -181,16 +193,11 @@ public:
 		static float alpha = 0.0f;
 		alpha += 0.0001f;
 
-		glm::mat4& model_0 = *(glm::mat4*)(((uint64_t)uboInstance.model + (0 * dynamicAlignment)));
-		model_0 = glm::translate(glm::mat4x4(1), glm::vec3(0 + alpha, 0, -10));
+		uboInstance->model[0] = glm::translate(glm::mat4x4(1), glm::vec3(0 + alpha, 0, -10));
+		uboInstance->model[1] = glm::translate(glm::mat4x4(1), glm::vec3(0 - alpha, 0, -10));
+		uboInstance->model[2] = glm::translate(glm::mat4x4(1), glm::vec3(0, 0 - alpha, -10));
 
-		glm::mat4& model_1 = *(glm::mat4*)(((uint64_t)uboInstance.model + (1 * dynamicAlignment)));
-		model_1 = glm::translate(glm::mat4x4(1), glm::vec3(0 - alpha, 0, -10));
-
-		glm::mat4& model_2 = *(glm::mat4*)(((uint64_t)uboInstance.model + (2 * dynamicAlignment)));
-		model_2 = glm::translate(glm::mat4x4(1), glm::vec3(0, 0 - alpha, -10));
-
-		uboInstanceBuffer->Update(uboInstance.model);
+		uboInstanceBuffer->Update(uboInstance->model.data);
 	}
 
 	void Update() override
@@ -242,7 +249,7 @@ public:
 	{
 		Vk::Global::device->WaitIdle();
 
-		alignedFree(uboInstance.model);
+		delete uboInstance;
 
 		delete descriptorSet;
 		delete descriptorPool;
