@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../common.h"
+#include "../../../../common.h"
 
 #include "image.h"
 
@@ -16,8 +16,13 @@ namespace Engine
 
 			VkImageView& GetVkImageView();
 
+			VkDescriptorImageInfo& GetDescriptor();
+
 		private:
 			VkImageView vkImageView;
+
+			VkDescriptorImageInfo descriptor;
+			void SetupDefaultDescriptor();
 
 			ImageView(const ImageView&) = delete;
 			ImageView& operator=(const ImageView&) = delete;

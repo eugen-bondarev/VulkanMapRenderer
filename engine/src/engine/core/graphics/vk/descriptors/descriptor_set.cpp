@@ -20,6 +20,20 @@ namespace Engine
 			return descriptor_write;
 		}
 
+		VkWriteDescriptorSet CreateWriteDescriptorSet(DescriptorSet* descriptor_set, uint32_t binding, VkDescriptorType descriptor_type, const VkDescriptorImageInfo* descriptor_image_info)
+		{			
+			VkWriteDescriptorSet descriptor_write = {};
+			descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptor_write.dstSet = descriptor_set->GetVkDescriptorSet();
+			descriptor_write.dstBinding = binding;
+			descriptor_write.dstArrayElement = 0;
+			descriptor_write.descriptorType = descriptor_type;
+			descriptor_write.descriptorCount = 1;
+			descriptor_write.pImageInfo = descriptor_image_info;
+
+			return descriptor_write;
+		}
+
 		DescriptorSet::DescriptorSet(DescriptorPool* descriptor_pool, const std::vector<VkDescriptorSetLayout>& layouts)
 		{
         	VkDescriptorSetAllocateInfo alloc_info{};

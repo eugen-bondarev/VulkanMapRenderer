@@ -5,6 +5,7 @@
 #include "device/device.h"
 #include "swap_chain/swap_chain.h"
 #include "commands/command_pool.h"
+#include "image/sampler.h"
 
 namespace Engine
 {

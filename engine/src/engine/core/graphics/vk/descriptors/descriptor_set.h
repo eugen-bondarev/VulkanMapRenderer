@@ -1,8 +1,11 @@
 #pragma once
 
-#include "../../common.h"
+#include "../../../../common.h"
 
 #include "descriptor_pool.h"
+
+#include "../image/image_view.h"
+#include "../image/sampler.h"
 
 namespace Engine
 {
@@ -26,5 +29,6 @@ namespace Engine
 		};
 
 		VkWriteDescriptorSet CreateWriteDescriptorSet(DescriptorSet* descriptor_set, uint32_t binding, VkDescriptorType descriptor_type, const VkDescriptorBufferInfo* descriptor_buffer_info);
+		VkWriteDescriptorSet CreateWriteDescriptorSet(DescriptorSet* descriptor_set, uint32_t binding, VkDescriptorType descriptor_type, const VkDescriptorImageInfo* descriptor_image_info);
 	}
 }

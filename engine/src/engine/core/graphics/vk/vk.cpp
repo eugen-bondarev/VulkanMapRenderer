@@ -11,10 +11,12 @@ namespace Engine
 			Global::device = new Global::Device();
 			Global::swapChain = new Global::SwapChain();
 			Global::commandPool = new CommandPool();
+			Global::constantInterpolationSampler = new Sampler();
 		}
 
 		void Shutdown()
 		{
+			delete Global::constantInterpolationSampler;
 			delete Global::commandPool;
 			delete Global::swapChain;
 			delete Global::device;

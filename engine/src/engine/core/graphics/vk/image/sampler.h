@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../common.h"
+#include "../../../../common.h"
 
 namespace Engine
 {
@@ -20,5 +20,10 @@ namespace Engine
 			Sampler(const Sampler&) = delete;
 			Sampler& operator=(const Sampler&) = delete;
 		};
+
+		namespace Global
+		{
+			extern Sampler* constantInterpolationSampler;
+		}
 	}
 }

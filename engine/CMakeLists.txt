@@ -17,7 +17,7 @@ target_include_directories(
 	../external/glm
 )
 
-target_precompile_headers(engine PRIVATE src/engine/core/graphics/common.h)
+target_precompile_headers(engine PRIVATE src/engine/common.h)
 
 target_link_libraries(engine 
     glfw

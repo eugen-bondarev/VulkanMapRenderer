@@ -6,6 +6,11 @@ namespace Engine
 {
 	namespace Vk
 	{
+		namespace Global
+		{
+			Sampler* constantInterpolationSampler;
+		}
+
 		Sampler::Sampler()
 		{
 			VkSamplerCreateInfo create_info{};

@@ -54,12 +54,6 @@ public:
 				Vk::Buffer* buffer;
 				UBOScene data;
 			} perScene;
-
-			struct
-			{
-				Vk::Buffer* buffer;
-				UBOInstance* data;
-			} perInstance;
 		} ubo;
 
 		Vk::Pipeline* pipeline;		
@@ -67,7 +61,6 @@ public:
 
 	Vk::Image* image;
 	Vk::ImageView* imageView;
-	Vk::Sampler* sampler;
 
 	Vk::DescriptorPool* descriptorPool;
 

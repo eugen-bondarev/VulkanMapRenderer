@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../graphics/common.h"
+#include "../../common.h"
 
 namespace Engine
 {

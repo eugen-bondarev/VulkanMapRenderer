@@ -2,15 +2,11 @@
 
 void NaturaForge::Init()
 {
+	frameManager = new Vk::FrameManager();
+
 	scene.ubo.perScene.data.view = glm::mat4x4(1);
-	// scene.ubo.perScene.data.projection = glm::perspective(glm::radians(70.0f), window->GetSize().x / window->GetSize().y, 0.1f, 1000.0f);
 	glm::vec2 half_size = window->GetSize() / 2.0f;
 	scene.ubo.perScene.data.projection = glm::ortho(-half_size.x, half_size.x, -half_size.y, half_size.y);
-
-	scene.ubo.perInstance.data = new UBOInstance(amountOfInstances);
-	size_t buffer_size = amountOfInstances * Aligned<glm::mat4x4>::dynamicAlignment;
-
-	frameManager = new Vk::FrameManager();
 
 	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
 	{
@@ -22,8 +18,7 @@ void NaturaForge::Init()
 	std::vector<VkDescriptorSetLayoutBinding> bindings = 
 	{
 		Vk::CreateBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
-		Vk::CreateBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC),
-		Vk::CreateBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+		Vk::CreateBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 	};
 
 	descriptorSetLayout = new Vk::DescriptorSetLayout(bindings);
@@ -35,22 +30,13 @@ void NaturaForge::Init()
 
 		image = new Vk::Image(&staging_buffer, map_texture.GetSize(), map_texture.GetAmountOfChannels());
 		imageView = new Vk::ImageView(image);
-		sampler = new Vk::Sampler();
 	}
 
 	Assets::Text vs_code("assets/shaders/default.vert.spv");
 	Assets::Text fs_code("assets/shaders/default.frag.spv");
 
-	Vk::BindingDescriptions vertex_buffer_binding_descriptors;
-	Vk::AttributeDescriptions vertex_buffer_attribute_descriptors;
-	for (int i = 0; i < Vk::Vertex::GetBindingDescriptions().size(); i++)
-		vertex_buffer_binding_descriptors.push_back(Vk::Vertex::GetBindingDescriptions()[i]);
-	for (int i = 0; i < Vk::PerInstanceVertex::GetBindingDescriptions().size(); i++)
-		vertex_buffer_binding_descriptors.push_back(Vk::PerInstanceVertex::GetBindingDescriptions()[i]);
-	for (int i = 0; i < Vk::Vertex::GetAttributeDescriptions().size(); i++)
-		vertex_buffer_attribute_descriptors.push_back(Vk::Vertex::GetAttributeDescriptions()[i]);
-	for (int i = 0; i < Vk::PerInstanceVertex::GetAttributeDescriptions().size(); i++)
-		vertex_buffer_attribute_descriptors.push_back(Vk::PerInstanceVertex::GetAttributeDescriptions()[i]);
+	Vk::BindingDescriptions vertex_buffer_binding_descriptors = Util::Vector::Merge(Vk::Vertex::GetBindingDescriptions(), Vk::PerInstanceVertex::GetBindingDescriptions());
+	Vk::AttributeDescriptions vertex_buffer_attribute_descriptors = Util::Vector::Merge(Vk::Vertex::GetAttributeDescriptions(), Vk::PerInstanceVertex::GetAttributeDescriptions());
 
 	scene.pipeline = new Vk::Pipeline(
 		vs_code.GetContent(), fs_code.GetContent(), 
@@ -98,59 +84,29 @@ void NaturaForge::Init()
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
 	);
 
-	scene.ubo.perInstance.buffer = new Vk::Buffer(
-		buffer_size,
-		1,
-		scene.ubo.perInstance.data->model.data,
-		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
-	);
-	scene.ubo.perInstance.buffer->SetDescriptor(Aligned<glm::mat4x4>::dynamicAlignment);
-
 	descriptorSet = new Vk::DescriptorSet(descriptorPool, { descriptorSetLayout->GetVkDescriptorSetLayout() });
-
-	VkWriteDescriptorSet image_write_descriptor_set = {};
-
-    VkDescriptorImageInfo image_info{};
-    image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    image_info.imageView = imageView->GetVkImageView();
-    image_info.sampler = sampler->GetVkSampler();
-
-	image_write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	image_write_descriptor_set.dstSet = descriptorSet->GetVkDescriptorSet();
-	image_write_descriptor_set.dstBinding = 2;
-	image_write_descriptor_set.dstArrayElement = 0;
-	image_write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	image_write_descriptor_set.descriptorCount = 1;
-	image_write_descriptor_set.pImageInfo = &image_info;
 
 	std::vector<VkWriteDescriptorSet> write_descriptor_sets = 
 	{
 		Vk::CreateWriteDescriptorSet(descriptorSet, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &scene.ubo.perScene.buffer->GetDescriptor()),
-		Vk::CreateWriteDescriptorSet(descriptorSet, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, &scene.ubo.perInstance.buffer->GetDescriptor()),
-		image_write_descriptor_set
+		Vk::CreateWriteDescriptorSet(descriptorSet, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &imageView->GetDescriptor())
 	};
 
 	descriptorSet->Update(write_descriptor_sets);
 
 	imagesInFlight.resize(Vk::Global::swapChain->GetImageViews().size());
+
 }
 
 void NaturaForge::UpdateUBO()
 {
 	static float alpha = 0.0f;
-	alpha += 0.001f;
+	// alpha += Time::deltaTime * 50;
 
 	std::array<glm::vec2, 2> positions;
 	positions[0] = glm::vec2(alpha, 0);
 	positions[1] = glm::vec2(-alpha, 0);
 	scene.dynamicVertexBuffer->Update(positions.data(), static_cast<uint32_t>(sizeof(glm::vec2) * positions.size()));
-
-	scene.ubo.perInstance.data->model[0] = glm::translate(glm::mat4x4(1), glm::vec3(0, 0, 0));
-	// scene.ubo.perInstance.data->model[1] = glm::translate(glm::mat4x4(1), glm::vec3(0 - alpha, 0, -10));
-	// scene.ubo.perInstance.data->model[2] = glm::translate(glm::mat4x4(1), glm::vec3(0, 0 - alpha, -10));
-	// scene.ubo.perInstance.data->model[3] = glm::translate(glm::mat4x4(1), glm::vec3(0, 0 + alpha, -10));
-
-	scene.ubo.perInstance.buffer->Update(scene.ubo.perInstance.data->model.data);
 }
 
 void NaturaForge::RecordCommandBuffer(Vk::CommandPool* command_pool, Vk::CommandBuffer* cmd)
@@ -161,13 +117,9 @@ void NaturaForge::RecordCommandBuffer(Vk::CommandPool* command_pool, Vk::Command
 		cmd->BeginRenderPass(scene.pipeline->GetRenderPass(), Vk::Global::swapChain->GetCurrentScreenFramebuffer());
 			cmd->BindPipeline(scene.pipeline);
 				cmd->BindVertexBuffers({ scene.mesh.vertexBuffer, scene.dynamicVertexBuffer }, { 0, 0 });
-				cmd->BindIndexBuffer(scene.mesh.indexBuffer);					
-					for (int i = 0; i < amountOfInstances; i++)
-					{
-						uint32_t dynamic_offset = i * Aligned<glm::mat4x4>::dynamicAlignment;
-						cmd->BindDescriptorSets(scene.pipeline, 1, &descriptorSet->GetVkDescriptorSet(), 1, &dynamic_offset);							
-						cmd->DrawIndexed(scene.mesh.indexBuffer->GetAmountOfElements(), 2, 0, 0, 0);
-					}
+				cmd->BindIndexBuffer(scene.mesh.indexBuffer);
+					cmd->BindDescriptorSets(scene.pipeline, 1, &descriptorSet->GetVkDescriptorSet());
+					cmd->DrawIndexed(scene.mesh.indexBuffer->GetAmountOfElements(), 2, 0, 0, 0);
 		cmd->EndRenderPass();
 	cmd->End();
 }
@@ -238,7 +190,6 @@ void NaturaForge::Shutdown()
 {
 	Vk::Global::device->WaitIdle();
 
-	delete sampler;
 	delete imageView;
 	delete image;
 
@@ -246,9 +197,7 @@ void NaturaForge::Shutdown()
 	delete descriptorPool;
 	delete descriptorSetLayout;
 
-	delete scene.ubo.perInstance.data;
 	delete scene.ubo.perScene.buffer;
-	delete scene.ubo.perInstance.buffer;
 	delete scene.mesh.vertexBuffer;
 	delete scene.mesh.indexBuffer;
 	delete scene.pipeline;

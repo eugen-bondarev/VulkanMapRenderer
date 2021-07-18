@@ -2,6 +2,8 @@
 
 #include "../device/device.h"
 
+#include "sampler.h"
+
 namespace Engine
 {
 	namespace Vk
@@ -20,6 +22,9 @@ namespace Engine
 			create_info.subresourceRange.layerCount = 1;
 
 			VK_CHECK(vkCreateImageView(Global::device->GetVkDevice(), &create_info, nullptr, &vkImageView), "Failed to create texture image view.");
+
+			SetupDefaultDescriptor();
+
 			TRACE();
 		}
 
@@ -32,6 +37,18 @@ namespace Engine
 		VkImageView& ImageView::GetVkImageView()
 		{
 			return vkImageView;
+		}
+
+		void ImageView::SetupDefaultDescriptor()
+		{
+			descriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			descriptor.imageView = vkImageView;
+			descriptor.sampler = Global::constantInterpolationSampler->GetVkSampler();
+		}
+
+		VkDescriptorImageInfo& ImageView::GetDescriptor()
+		{
+			return descriptor;
 		}
 	}
 }
