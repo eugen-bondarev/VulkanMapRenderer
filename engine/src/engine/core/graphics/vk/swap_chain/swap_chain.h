@@ -34,7 +34,7 @@ namespace Engine
 				const std::vector<VkImageView> &GetImageViews() const;
 
 			private:
-				uint32_t imageIndex;
+				uint32_t imageIndex { 0 };
 
 				std::vector<Vk::Framebuffer*> framebuffers;
 
