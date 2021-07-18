@@ -21,7 +21,6 @@ struct UBOInstance
 class NaturaForge : public App
 {
 public:
-
 	int amountOfInstances = 1;
 
 	void Init() override;

@@ -17,7 +17,7 @@ namespace Engine
 
 		struct PerInstanceVertex
 		{
-			glm::vec2 Position;
+			glm::vec4 Position;
 
 			static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
 			static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();

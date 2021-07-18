@@ -7,12 +7,14 @@ layout(binding = 0) uniform UniformBufferObject {
 
 layout(location = 0) in vec2 inPosition;
 layout(location = 1) in vec2 inTexCoords;
-layout(location = 2) in vec2 perInstancePos;
+layout(location = 2) in vec4 perInstancePos;
 
 layout(location = 0) out vec2 fragTexCoords;
+layout(location = 1) out vec2 out_Tile;
 
 void main() 
 {
-    gl_Position = ubo.proj * ubo.view * vec4(inPosition + perInstancePos, 0.0, 1.0);
+    gl_Position = ubo.proj * ubo.view * vec4(inPosition + perInstancePos.xy, 0.0, 1.0);
 	fragTexCoords = inTexCoords;
+	out_Tile = perInstancePos.zw;
 }

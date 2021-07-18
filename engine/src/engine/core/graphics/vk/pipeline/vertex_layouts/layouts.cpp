@@ -57,7 +57,7 @@ namespace Engine
 
 			attributeDescriptions[0].binding = 1;
 			attributeDescriptions[0].location = 2;
-			attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
 			attributeDescriptions[0].offset = offsetof(Vertex, Position);
 
 			return attributeDescriptions;

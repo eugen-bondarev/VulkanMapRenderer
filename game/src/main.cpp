@@ -47,7 +47,7 @@ void NaturaForge::Init()
 	scene.pipeline->SetAsOutput();
 
 	{
-		scene.dynamicVertexBuffer = new Vk::Buffer(sizeof(Vk::PerInstanceVertex), 25, nullptr, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+		scene.dynamicVertexBuffer = new Vk::Buffer(sizeof(Vk::PerInstanceVertex), 10000, nullptr, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 	}
 	{			
 		const std::vector<Vk::Vertex> vertices = 
@@ -101,12 +101,14 @@ void NaturaForge::Init()
 void NaturaForge::UpdateUBO()
 {
 	static float alpha = 0.0f;
-	// alpha += Time::deltaTime * 50;
+	alpha += Time::deltaTime * 50;
 
-	std::array<glm::vec2, 2> positions;
-	positions[0] = glm::vec2(alpha, 0);
-	positions[1] = glm::vec2(-alpha, 0);
-	scene.dynamicVertexBuffer->Update(positions.data(), static_cast<uint32_t>(sizeof(glm::vec2) * positions.size()));
+	std::array<glm::vec4, 2> positions;
+
+	positions[0] = glm::vec4(alpha, 0, 1, 0);
+	positions[1] = glm::vec4(-alpha, 0, 0, 0);
+
+	scene.dynamicVertexBuffer->Update(positions.data(), static_cast<uint32_t>(sizeof(glm::vec4) * positions.size()));
 }
 
 void NaturaForge::RecordCommandBuffer(Vk::CommandPool* command_pool, Vk::CommandBuffer* cmd)

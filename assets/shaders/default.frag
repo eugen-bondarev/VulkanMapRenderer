@@ -1,6 +1,7 @@
 #version 450
 
 layout(location = 0) in vec2 fragTexCoords;
+layout(location = 1) in vec2 out_Tile;
 
 layout(location = 0) out vec4 outColor;
 
@@ -12,6 +13,5 @@ layout(binding = 1) uniform sampler2D texSampler;
 void main() 
 {
     // outColor = texture(texSampler, fragTexCoords);	
-	vec2 tile = vec2(0, 0);
-  	outColor = texture(texSampler, (fragTexCoords + tile) / vec2(AMOUNT_OF_TILES_X, AMOUNT_OF_TILES_Y));
+  	outColor = texture(texSampler, (fragTexCoords + out_Tile) / vec2(AMOUNT_OF_TILES_X, AMOUNT_OF_TILES_Y));
 }
