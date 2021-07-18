@@ -22,7 +22,7 @@ class NaturaForge : public App
 {
 public:
 
-	int amountOfInstances = 4;
+	int amountOfInstances = 1;
 
 	void Init() override;
 	void UpdateUBO();
@@ -44,6 +44,8 @@ public:
 			Vk::Buffer* vertexBuffer;
 			Vk::Buffer* indexBuffer;
 		} mesh;
+		
+		Vk::Buffer* dynamicVertexBuffer;
 
 		struct
 		{

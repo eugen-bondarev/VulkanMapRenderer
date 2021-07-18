@@ -21,20 +21,35 @@
 
 #define VK_ASSERT(exp) assert((exp))
 
+#define VOID_ASSEMBLY	(void(0))
+
+#ifdef NDEBUG
+#	define RELEASE
+#else
+#	define DEBUG
+#endif
+
 #define LOG_OUT(...)		spdlog::info(__VA_ARGS__)
 #define ERR_OUT(...)		spdlog::error(__VA_ARGS__)
 #define WARN_OUT(...)		spdlog::warn(__VA_ARGS__)
-#define TRACE()				LOG_OUT("[Call]: " + std::string(__func__))
 
-#define THROW(...)					\
-	ERR_OUT(__VA_ARGS__);			\
-	throw std::runtime_error("")
+#ifdef DEBUG
+#	define TRACE()				LOG_OUT("[Call]: " + std::string(__func__))
 
-#define VK_CHECK(x, msg)			\
-	if (x != VK_SUCCESS)			\
-	{								\
-		THROW(msg);					\
-	}
+#	define THROW(...)					\
+		ERR_OUT(__VA_ARGS__);			\
+		throw std::runtime_error("")
+
+#	define VK_CHECK(x, msg)			\
+		if (x != VK_SUCCESS)			\
+		{								\
+			THROW(msg);					\
+		}
+#else
+#	define TRACE()				VOID_ASSEMBLY
+#	define THROW(...)			VOID_ASSEMBLY
+#	define VK_CHECK(x, msg)		x
+#endif
 
 inline static glm::vec2 ExtentToVec2(VkExtent2D extent)
 {

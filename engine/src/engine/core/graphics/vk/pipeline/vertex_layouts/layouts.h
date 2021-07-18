@@ -9,8 +9,15 @@ namespace Engine
 		struct Vertex
 		{
 			glm::vec2 Position;
-			glm::vec3 Color;
 			glm::vec2 TextureCoords;
+
+			static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
+			static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
+		};
+
+		struct PerInstanceVertex
+		{
+			glm::vec2 Position;
 
 			static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
 			static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();

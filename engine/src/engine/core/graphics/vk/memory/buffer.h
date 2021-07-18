@@ -49,6 +49,7 @@ namespace Engine
 			Buffer(Buffer* buffer, VkBufferUsageFlags usage_flags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 			~Buffer();
 
+			void Update(const void* data, uint32_t size) const;
 			void Update(const void* data) const;
 
 			uint32_t GetSize() const;

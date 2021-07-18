@@ -94,6 +94,14 @@ namespace Engine
 			SetupDefaultDescriptor();
 		}
 
+		void Buffer::Update(const void* data, uint32_t size) const
+		{
+			void* mapped_data;
+			vkMapMemory(Global::device->GetVkDevice(), vkMemory, 0, size, 0, &mapped_data);
+				memcpy(mapped_data, data, size);
+			vkUnmapMemory(Global::device->GetVkDevice(), vkMemory);
+		}
+
 		void Buffer::Update(const void* data) const
 		{
 			void* mapped_data;
