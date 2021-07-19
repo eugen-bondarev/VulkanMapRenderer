@@ -7,10 +7,17 @@
 using namespace Engine;
 using namespace Gameplay;
 
-struct G
+class G
 {
+public:
+	G() = default;
+
 	Camera camera;
 	Map map;
+
+private:
+	G(const G&) = delete;
+	G& operator=(const G&) = delete;
 };
 
 struct UBOScene
