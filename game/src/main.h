@@ -28,8 +28,6 @@ private:
 
 	void UpdateMap();
 	void UpdateProjectionViewMatrix();
-	void UpdateUBO();
-	void RecordCommandBuffer(Vk::CommandPool* command_pool, Vk::CommandBuffer* cmd);
 	void Render(Vk::CommandBuffer* cmd);
 	void Present();
 

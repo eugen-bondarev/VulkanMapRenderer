@@ -117,7 +117,7 @@ void NaturaForge::Init()
 					cmd->BindVertexBuffers({ scene.mesh.vertexBuffer, scene.dynamicVertexBuffer }, { 0, 0 });
 					cmd->BindIndexBuffer(scene.mesh.indexBuffer);
 						cmd->BindDescriptorSets(scene.pipeline, 1, &descriptorSet->GetVkDescriptorSet());
-						cmd->DrawIndexed(scene.mesh.indexBuffer->GetAmountOfElements(), 8733 /* TODO: Pre-calculate this! */, 0, 0, 0);
+						cmd->DrawIndexed(scene.mesh.indexBuffer->GetAmountOfElements(), game->map.GetAmountOfBlocks() /* TODO: Pre-calculate this! */, 0, 0, 0);
 			cmd->EndRenderPass();
 		cmd->End();
 	}
@@ -131,13 +131,16 @@ void NaturaForge::UpdateMap()
 		if (!(game->map.lastVisibleBlocks.start == game->map.visibleBlocks.start && game->map.lastVisibleBlocks.end == game->map.visibleBlocks.end))
 		{
 			game->map.PopulateBlocks(game->camera.GetPosition());
+
+			renderData = MapRenderer::GetRenderData(&game->map, game->camera.GetPosition());
+			scene.dynamicVertexBuffer->Update(renderData.data(), static_cast<uint32_t>(sizeof(glm::vec4) * renderData.size()));
 		}
 	}
 }
 
 void NaturaForge::UpdateProjectionViewMatrix()
 {
-	static float speed = 50.00f;
+	static float speed = 15.0f;
 
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_W))
 	{
@@ -156,32 +159,14 @@ void NaturaForge::UpdateProjectionViewMatrix()
 		game->camera.AddPosition(glm::vec2(-100, 0) * Time::deltaTime * speed);
 	}
 
-	glm::vec2 half_size = window->GetSize() / 2.0f;
-	glm::mat4x4 projection_matrix = glm::ortho(-half_size.x, half_size.x, -half_size.y, half_size.y);
-	glm::mat4x4 view_matrix = glm::inverse(glm::translate(glm::mat4x4(1), glm::vec3(game->camera.GetPosition(), 0.0f)));
-	glm::mat4x4 projection_view_matrix = projection_matrix * view_matrix;
-	scene.ubo.perScene.buffer->Update(&projection_view_matrix);
-}
-
-void NaturaForge::UpdateUBO()
-{
-	renderData = MapRenderer::GetRenderData(&game->map, game->camera.GetPosition());
-	scene.dynamicVertexBuffer->Update(renderData.data(), static_cast<uint32_t>(sizeof(glm::vec4) * renderData.size()));
-}
-
-void NaturaForge::RecordCommandBuffer(Vk::CommandPool* command_pool, Vk::CommandBuffer* cmd)
-{
-	command_pool->Reset();
-
-	cmd->Begin();
-		cmd->BeginRenderPass(scene.pipeline->GetRenderPass(), Vk::Global::swapChain->GetCurrentScreenFramebuffer());
-			cmd->BindPipeline(scene.pipeline);
-				cmd->BindVertexBuffers({ scene.mesh.vertexBuffer, scene.dynamicVertexBuffer }, { 0, 0 });
-				cmd->BindIndexBuffer(scene.mesh.indexBuffer);
-					cmd->BindDescriptorSets(scene.pipeline, 1, &descriptorSet->GetVkDescriptorSet());
-					cmd->DrawIndexed(scene.mesh.indexBuffer->GetAmountOfElements(), renderData.size(), 0, 0, 0);
-		cmd->EndRenderPass();
-	cmd->End();
+	if (game->camera.GetEvents() & CameraEvents_PositionChanged)
+	{
+		glm::vec2 half_size = window->GetSize() / 2.0f;
+		glm::mat4x4 projection_matrix = glm::ortho(-half_size.x, half_size.x, -half_size.y, half_size.y);
+		glm::mat4x4 view_matrix = glm::inverse(glm::translate(glm::mat4x4(1), glm::vec3(game->camera.GetPosition(), 0.0f)));
+		glm::mat4x4 projection_view_matrix = projection_matrix * view_matrix;
+		scene.ubo.perScene.buffer->Update(&projection_view_matrix);
+	}
 }
 
 void NaturaForge::Render(Vk::CommandBuffer* cmd)
@@ -234,7 +219,6 @@ void NaturaForge::Update()
 	game->camera.CheckPositionChange();
 	UpdateProjectionViewMatrix();
 	UpdateMap();
-	UpdateUBO();
 	Render(current_command_buffer);
 	Present();
 
@@ -243,7 +227,7 @@ void NaturaForge::Update()
 	
 	if (timer >= 1.0f)
 	{
-		LOG_OUT("FPS: {0}", Time::GetFPS());
+		LOG_OUT("Average FPS: {0}", Time::GetAverageFPS());
 		timer = 0.0f;
 	}
 }

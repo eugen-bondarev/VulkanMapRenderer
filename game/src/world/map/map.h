@@ -33,16 +33,18 @@ namespace Gameplay
 		Map();
 		~Map();
 
-		FastNoiseLite noise;
-
 		Blocks_t& GetBlocks();
 
 		void PopulateBlocks(glm::vec2 view_position);
 		void CalculateVisibleBlocks(glm::vec2 view_position);
+
+		int GetAmountOfBlocks();
 		
 	private:
 		Blocks_t blocks;
 		std::vector<glm::vec4> blocksForRendering;
+
+		FastNoiseLite noise;
 	
 		void DetermineDimensionsInBlocks();
 

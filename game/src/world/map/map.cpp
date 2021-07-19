@@ -77,6 +77,11 @@ namespace Gameplay
 		}
 	}
 
+	int Map::GetAmountOfBlocks()
+	{
+		return blocks.size() * blocks[0].size();
+	}
+
 	Blocks_t& Map::GetBlocks()
 	{
 		return blocks;
