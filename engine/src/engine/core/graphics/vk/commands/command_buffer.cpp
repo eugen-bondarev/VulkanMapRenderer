@@ -75,8 +75,9 @@ namespace Engine
 			submit_info.framebuffer = framebuffer->GetVkFramebuffer();
 			submit_info.renderArea.extent = {static_cast<uint32_t>(framebuffer->GetSize().x), static_cast<uint32_t>(framebuffer->GetSize().y)};
 			submit_info.clearValueCount = 1;
-			VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-			submit_info.pClearValues = &clearColor;
+			VkClearValue clear_color = { 145.0f / 255.0f, 206.0f / 255.0f, 255.0f / 255.0f, 1.0f };
+			submit_info.pClearValues = &clear_color;
+			
 			vkCmdBeginRenderPass(vkCommandBuffer, &submit_info, VK_SUBPASS_CONTENTS_INLINE);
 		}
 

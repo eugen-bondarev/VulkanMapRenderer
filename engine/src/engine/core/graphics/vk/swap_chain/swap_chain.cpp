@@ -231,6 +231,11 @@ namespace Engine
 				return extent;
 			}
 
+			std::vector<Vk::Framebuffer*>& SwapChain::GetFramebuffers()
+			{
+				return framebuffers;
+			}
+
 			const std::vector<VkImage> &SwapChain::GetImages() const
 			{
 				return images;

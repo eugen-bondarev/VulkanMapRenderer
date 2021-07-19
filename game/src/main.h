@@ -1,31 +1,27 @@
 #include <engine/engine.h>
 #include "world/map/map.h"
 
+#include "gameplay/ecs/camera.h"
+#include "gameplay/game.h"
+
 using namespace Engine;
-using namespace Game;
+using namespace Gameplay;
+
+struct G
+{
+	Camera camera;
+	Map map;
+};
 
 struct UBOScene
 {
 	glm::mat4x4 projection;
 };
 
-struct UBOInstance
-{
-	Aligned<glm::mat4x4> model;
-
-	UBOInstance(uint32_t amount_of_instances) : model { amount_of_instances }
-	{
-
-	}
-};
-
 class NaturaForge : public App
 {
 public:
 	int amountOfInstances = 1;
-
-	glm::vec2 viewPosition { 0 };
-	glm::vec2 lastViewPosition { 0 };
 
 	void Init() override;
 	void Update() override;
@@ -34,14 +30,14 @@ public:
 private:
 	std::vector<glm::vec4> renderData;
 
+	G* game;
+
 	void UpdateMap();
 	void UpdateProjectionViewMatrix();
 	void UpdateUBO();
 	void RecordCommandBuffer(Vk::CommandPool* command_pool, Vk::CommandBuffer* cmd);
 	void Render(Vk::CommandBuffer* cmd);
 	void Present();
-
-	Map* map;
 
 	Vk::FrameManager* frameManager;
 	std::vector<Vk::CommandPool*> commandPools;

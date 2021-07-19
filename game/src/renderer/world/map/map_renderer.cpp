@@ -2,7 +2,7 @@
 
 #include <engine/engine.h>
 
-namespace Game
+namespace Gameplay
 {
 	namespace MapRenderer
 	{		
@@ -27,6 +27,7 @@ namespace Game
 					}
 				}
 			}
+			
 			return data;
 		}
 	}

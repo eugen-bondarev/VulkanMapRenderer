@@ -2,7 +2,7 @@
 
 #include "FastNoiseLite/FastNoiseLite.h"
 
-namespace Game
+namespace Gameplay
 {
 	Map::Map()
 	{
@@ -60,6 +60,11 @@ namespace Game
 				block_position.y = y * BLOCK_SIZE;
 
 				glm::ivec2 normalized_indices = glm::ivec2(x, y) - visibleBlocks.start;
+
+				// normalized_indices.y = std::min<int>(normalized_indices.y, blocks[0].size() - 1);
+
+				// VK_ASSERT(normalized_indices.x < blocks.size());
+				// VK_ASSERT(normalized_indices.y < blocks[0].size());
  
 				if (block_position.y > horizon + height_in_this_area * noise.GetNoise(block_position.x * settings.size2, 0.0f))
 				{

@@ -6,7 +6,7 @@
 
 #include "FastNoiseLite/FastNoiseLite.h"
 
-namespace Game
+namespace Gameplay
 {
 	class Map
 	{

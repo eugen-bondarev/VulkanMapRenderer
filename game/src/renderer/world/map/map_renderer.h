@@ -2,7 +2,7 @@
 
 #include "../../../world/map/map.h"
 
-namespace Game
+namespace Gameplay
 {
 	namespace MapRenderer
 	{

@@ -97,21 +97,43 @@ void NaturaForge::Init()
 
 	imagesInFlight.resize(Vk::Global::swapChain->GetImageViews().size());
 
-	map = new Map();
+	// map = std::make_unique<Map>();
+	game = new G();
+	
+	/*
+	* It's definitely efficient to write to command buffer once.
+	* 
+	* But I don't know if it's going to be possible in the conditions of the game.
+	*
+	* Note: Alternatively I can create command buffers (three) especially for this task (to render the map),
+	* which I most likely will end up doing
+	*/
+	for (int i = 0; i < commandBuffers.size(); i++)
+	{
+		Vk::CommandBuffer* cmd = commandBuffers[i];
+		Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetFramebuffers()[i];
+
+		cmd->Begin();
+			cmd->BeginRenderPass(scene.pipeline->GetRenderPass(), framebuffer);
+				cmd->BindPipeline(scene.pipeline);
+					cmd->BindVertexBuffers({ scene.mesh.vertexBuffer, scene.dynamicVertexBuffer }, { 0, 0 });
+					cmd->BindIndexBuffer(scene.mesh.indexBuffer);
+						cmd->BindDescriptorSets(scene.pipeline, 1, &descriptorSet->GetVkDescriptorSet());
+						cmd->DrawIndexed(scene.mesh.indexBuffer->GetAmountOfElements(), 8733 /* TODO: Pre-calculate this! */, 0, 0, 0);
+			cmd->EndRenderPass();
+		cmd->End();
+	}
 }
 
 void NaturaForge::UpdateMap()
 {
-	if (viewPosition != lastViewPosition)
+	if (game->camera.GetEvents() & CameraEvents_PositionChanged)
 	{
-		map->CalculateVisibleBlocks(viewPosition);
-		if (!(map->lastVisibleBlocks.start == map->visibleBlocks.start && map->lastVisibleBlocks.end == map->visibleBlocks.end))
+		game->map.CalculateVisibleBlocks(game->camera.GetPosition());
+		if (!(game->map.lastVisibleBlocks.start == game->map.visibleBlocks.start && game->map.lastVisibleBlocks.end == game->map.visibleBlocks.end))
 		{
-			map->PopulateBlocks(viewPosition);
-			map->lastVisibleBlocks = map->visibleBlocks;
+			game->map.PopulateBlocks(game->camera.GetPosition());
 		}
-
-		lastViewPosition = viewPosition;
 	}
 }
 
@@ -121,31 +143,31 @@ void NaturaForge::UpdateProjectionViewMatrix()
 
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_W))
 	{
-		viewPosition += glm::vec2(0, -100) * Time::deltaTime * speed;
+		game->camera.AddPosition(glm::vec2(0, -100) * Time::deltaTime * speed);
 	}
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_S))
 	{
-		viewPosition += glm::vec2(0, 100) * Time::deltaTime * speed;
+		game->camera.AddPosition(glm::vec2(0, 100) * Time::deltaTime * speed);
 	}
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_D))
 	{
-		viewPosition += glm::vec2(100, 0) * Time::deltaTime * speed;
+		game->camera.AddPosition(glm::vec2(100, 0) * Time::deltaTime * speed);
 	}
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_A))
 	{
-		viewPosition += glm::vec2(-100, 0) * Time::deltaTime * speed;
+		game->camera.AddPosition(glm::vec2(-100, 0) * Time::deltaTime * speed);
 	}
 
 	glm::vec2 half_size = window->GetSize() / 2.0f;
 	glm::mat4x4 projection_matrix = glm::ortho(-half_size.x, half_size.x, -half_size.y, half_size.y);
-	glm::mat4x4 view_matrix = glm::inverse(glm::translate(glm::mat4x4(1), glm::vec3(viewPosition, 0.0f)));
+	glm::mat4x4 view_matrix = glm::inverse(glm::translate(glm::mat4x4(1), glm::vec3(game->camera.GetPosition(), 0.0f)));
 	glm::mat4x4 projection_view_matrix = projection_matrix * view_matrix;
 	scene.ubo.perScene.buffer->Update(&projection_view_matrix);
 }
 
 void NaturaForge::UpdateUBO()
 {
-	renderData = MapRenderer::GetRenderData(map, viewPosition);
+	renderData = MapRenderer::GetRenderData(&game->map, game->camera.GetPosition());
 	scene.dynamicVertexBuffer->Update(renderData.data(), static_cast<uint32_t>(sizeof(glm::vec4) * renderData.size()));
 }
 
@@ -211,10 +233,10 @@ void NaturaForge::Update()
 	Vk::CommandPool* current_command_pool = commandPools[image_index];
 	Vk::CommandBuffer* current_command_buffer = commandBuffers[image_index];	
 
-	UpdateMap();
+	game->camera.CheckPositionChange();
 	UpdateProjectionViewMatrix();
+	UpdateMap();
 	UpdateUBO();
-	RecordCommandBuffer(current_command_pool, current_command_buffer);
 	Render(current_command_buffer);
 	Present();
 
@@ -230,8 +252,6 @@ void NaturaForge::Update()
 
 void NaturaForge::Shutdown()
 {
-	delete map;
-
 	Vk::Global::device->WaitIdle();
 
 	delete imageView;

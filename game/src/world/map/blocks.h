@@ -2,7 +2,7 @@
 
 #include <vector>
 
-namespace Game
+namespace Gameplay
 {
 	enum class TileType
 	{

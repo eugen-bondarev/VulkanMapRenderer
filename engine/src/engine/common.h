@@ -13,6 +13,7 @@
 #include <vector>
 #include <array>
 #include <algorithm>
+#include <memory>
 #include <assert.h>
 
 #include <spdlog/spdlog.h>
@@ -61,3 +62,12 @@ inline static VkExtent2D ExtentToVec2(glm::vec2 vec)
 {
 	return { static_cast<uint32_t>(vec.x), static_cast<uint32_t>(vec.y) };
 }
+
+#define ENUM_USE_FOR_FLAGS(T)\
+inline T operator~ (T a) 			{ return static_cast<T>(~static_cast<int>(a)); }\
+inline T operator| (T a, T b) 		{ return static_cast<T>(static_cast<int>(a) | static_cast<int>(b)); }\
+inline T operator& (T a, T b) 		{ return static_cast<T>(static_cast<int>(a) & static_cast<int>(b)); }\
+inline T operator^ (T a, T b) 		{ return static_cast<T>(static_cast<int>(a) ^ static_cast<int>(b)); }\
+inline T& operator|= (T& a, T b) 	{ return reinterpret_cast<T&>(reinterpret_cast<int&>(a) |= static_cast<int>(b)); }\
+inline T& operator&= (T& a, T b) 	{ return reinterpret_cast<T&>(reinterpret_cast<int&>(a) &= static_cast<int>(b)); }\
+inline T& operator^= (T& a, T b) 	{ return reinterpret_cast<T&>(reinterpret_cast<int&>(a) ^= static_cast<int>(b)); }

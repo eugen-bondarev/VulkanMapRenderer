@@ -29,6 +29,7 @@ namespace Engine
 
 				void InitFramebuffers(VkRenderPass& render_pass);
 				Vk::Framebuffer* GetCurrentScreenFramebuffer();
+				std::vector<Vk::Framebuffer*>& GetFramebuffers();
 
 				const std::vector<VkImage> &GetImages() const;
 				const std::vector<VkImageView> &GetImageViews() const;
