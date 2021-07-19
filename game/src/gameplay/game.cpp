@@ -2,11 +2,4 @@
 
 namespace Gameplay
 {
-	Game::Game()
-	{
-	}
-
-	Game::~Game()
-	{
-	}
 }

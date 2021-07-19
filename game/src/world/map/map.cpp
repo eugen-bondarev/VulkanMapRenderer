@@ -19,10 +19,9 @@ namespace Gameplay
 	{
 		static glm::vec2 correction = glm::vec2(-16, 16);
 		visibleBlocks.start.x = (view_position.x + correction.x - Engine::window->GetSize().x / 2.0f) / 16.0f / 1;
-		visibleBlocks.end.x = visibleBlocks.start.x + Engine::window->GetSize().x / (1 * BLOCK_SIZE) + 2;
+		visibleBlocks.end.x = visibleBlocks.start.x + Engine::window->GetSize().x / BLOCK_SIZE + 4;
 		visibleBlocks.start.y = (view_position.y + correction.y - Engine::window->GetSize().y / 2.0f) / 16.0f / 1;
-		visibleBlocks.end.y = visibleBlocks.start.y + Engine::window->GetSize().y / (1 * BLOCK_SIZE) + 2;
-		visibleBlocks.start.x -= 1;
+		visibleBlocks.end.y = visibleBlocks.start.y + Engine::window->GetSize().y / BLOCK_SIZE + 2;
 		visibleBlocks.start.y -= 2;
 	}
 
@@ -61,11 +60,9 @@ namespace Gameplay
 
 				glm::ivec2 normalized_indices = glm::ivec2(x, y) - visibleBlocks.start;
 
-				// normalized_indices.y = std::min<int>(normalized_indices.y, blocks[0].size() - 1);
+				normalized_indices.x = std::min<int>(normalized_indices.x, blocks.size() - 1);
+				normalized_indices.y = std::min<int>(normalized_indices.y, blocks[0].size() - 1);
 
-				// VK_ASSERT(normalized_indices.x < blocks.size());
-				// VK_ASSERT(normalized_indices.y < blocks[0].size());
- 
 				if (block_position.y > horizon + height_in_this_area * noise.GetNoise(block_position.x * settings.size2, 0.0f))
 				{
 					blocks[normalized_indices.x][normalized_indices.y].type = BlockType::Dirt;

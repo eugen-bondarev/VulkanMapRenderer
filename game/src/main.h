@@ -7,19 +7,6 @@
 using namespace Engine;
 using namespace Gameplay;
 
-class G
-{
-public:
-	G() = default;
-
-	Camera camera;
-	Map map;
-
-private:
-	G(const G&) = delete;
-	G& operator=(const G&) = delete;
-};
-
 struct UBOScene
 {
 	glm::mat4x4 projection;
@@ -37,7 +24,7 @@ public:
 private:
 	std::vector<glm::vec4> renderData;
 
-	G* game;
+	Game* game;
 
 	void UpdateMap();
 	void UpdateProjectionViewMatrix();

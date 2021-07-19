@@ -9,14 +9,13 @@ namespace Gameplay
 	class Game
 	{
 	public:
-		Game();
-		~Game();
+		Game() = default;
 
 		Camera camera;
 		Map map;
 
 	private:
-		// Game(const Game&) = delete;
-		// Game& operator=(const Game&) = delete;
+		Game(const Game&) = delete;
+		Game& operator=(const Game&) = delete;
 	};
 }

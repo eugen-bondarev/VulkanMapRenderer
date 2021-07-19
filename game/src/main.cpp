@@ -97,8 +97,7 @@ void NaturaForge::Init()
 
 	imagesInFlight.resize(Vk::Global::swapChain->GetImageViews().size());
 
-	// map = std::make_unique<Map>();
-	game = new G();
+	game = new Game();
 	
 	/*
 	* It's definitely efficient to write to command buffer once.
