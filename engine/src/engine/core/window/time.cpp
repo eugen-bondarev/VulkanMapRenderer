@@ -8,9 +8,11 @@ namespace Engine
 		float currentTime 	{ 0 };
 		float deltaTime 	{ 0 };
 
-		std::vector<float> fpsMeasurements;
-		float sum = 0;
-		int amount = 0;
+		struct
+		{
+			float sum = 0;
+			int amount = 0;
+		} fps;
 	
 		void BeginMeasurement()
 		{
@@ -22,8 +24,8 @@ namespace Engine
 			deltaTime = currentTime - lastTime;
 			lastTime = currentTime;
 
-			sum += GetFPS();
-			amount++;
+			fps.sum += GetFPS();
+			fps.amount++;
 		}
 
 		float GetFPS()
@@ -33,7 +35,7 @@ namespace Engine
 		
 		float GetAverageFPS()
 		{
-			return sum / amount;
+			return fps.sum / fps.amount;
 		}
 	}
 }
