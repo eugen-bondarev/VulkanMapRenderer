@@ -73,9 +73,8 @@ void NaturaForge::Init()
 	}
 
 	descriptorPool = new Vk::DescriptorPool({
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 }
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 30 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 30 }
 	});
 
 	scene.ubo.perScene.buffer = new Vk::Buffer(
