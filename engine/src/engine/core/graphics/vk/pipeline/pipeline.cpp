@@ -14,7 +14,8 @@ namespace Engine
 			VkFormat image_format,
 			const BindingDescriptions &binding_descriptions,
 			const AttributeDescriptions &attribute_descriptions,
-			const SetLayouts &set_layouts)
+			const SetLayouts &set_layouts,
+			bool offscreen)
 		{
 			shader = new Shader(vs_code, fs_code);
 
@@ -116,7 +117,7 @@ namespace Engine
 
 			VK_CHECK(vkCreatePipelineLayout(Global::device->GetVkDevice(), &pipeline_layout_info, nullptr, &vkPipelineLayout), "Failed to create pipeline layout.");
 
-			renderPass = new RenderPass(image_format);
+			renderPass = new RenderPass(image_format, offscreen);
 
 			VkGraphicsPipelineCreateInfo pipeline_info{};
 			pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

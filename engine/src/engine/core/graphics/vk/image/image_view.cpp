@@ -2,8 +2,6 @@
 
 #include "../device/device.h"
 
-#include "sampler.h"
-
 namespace Engine
 {
 	namespace Vk
@@ -44,6 +42,12 @@ namespace Engine
 			descriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			descriptor.imageView = vkImageView;
 			descriptor.sampler = Global::constantInterpolationSampler->GetVkSampler();
+		}
+
+		void ImageView::SetupDescriptor(VkImageLayout image_layout, VkSampler sampler)
+		{
+			descriptor.imageLayout = image_layout;
+			descriptor.sampler = sampler;
 		}
 
 		VkDescriptorImageInfo& ImageView::GetDescriptor()

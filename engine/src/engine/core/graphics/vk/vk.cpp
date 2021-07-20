@@ -11,12 +11,14 @@ namespace Engine
 			Global::device = new Global::Device();
 			Global::swapChain = new Global::SwapChain();
 			Global::commandPool = new CommandPool();
-			Global::constantInterpolationSampler = new Sampler();
+			Global::constantInterpolationSampler = new Sampler(VK_FILTER_NEAREST);
+			Global::linearInterpolationSampler = new Sampler(VK_FILTER_LINEAR);
 		}
 
 		void Shutdown()
 		{
 			delete Global::constantInterpolationSampler;
+			delete Global::linearInterpolationSampler;
 			delete Global::commandPool;
 			delete Global::swapChain;
 			delete Global::device;

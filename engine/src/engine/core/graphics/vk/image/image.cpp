@@ -12,7 +12,7 @@ namespace Engine
 	{
 		namespace Util
 		{			
-			void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+			void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
 			{
 				CommandBuffer command_buffer(Global::commandPool);
 				
@@ -31,8 +31,8 @@ namespace Engine
 				barrier.subresourceRange.baseArrayLayer = 0;
 				barrier.subresourceRange.layerCount = 1;
 
-				barrier.srcAccessMask = 0; // TODO
-				barrier.dstAccessMask = 0; // TODO
+				// barrier.srcAccessMask = 0; // TODO
+				// barrier.dstAccessMask = 0; // TODO
 
 				VkPipelineStageFlags src_stage;
 				VkPipelineStageFlags dst_stage;
@@ -51,6 +51,14 @@ namespace Engine
 					barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
 					src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+					dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+				} 
+				else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) 
+				{
+					barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+					barrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+
+					src_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 					dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 				} 
 				else 
@@ -141,9 +149,9 @@ namespace Engine
 
 			vkBindImageMemory(Global::device->GetVkDevice(), vkImage, vkMemory, 0);
 
-			Util::TransitionImageLayout(vkImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+			Util::TransitionImageLayout(vkImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 			Util::CopyBufferToImage(buffer->GetVkBuffer(), vkImage, static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
-			Util::TransitionImageLayout(vkImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			Util::TransitionImageLayout(vkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			TRACE();
 		}
 

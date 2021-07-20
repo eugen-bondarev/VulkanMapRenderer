@@ -9,7 +9,7 @@ namespace Engine
 		class Sampler
 		{
 		public:
-			Sampler();
+			Sampler(VkFilter filter);
 			~Sampler();
 
 			VkSampler& GetVkSampler();
@@ -24,6 +24,7 @@ namespace Engine
 		namespace Global
 		{
 			extern Sampler* constantInterpolationSampler;
+			extern Sampler* linearInterpolationSampler;
 		}
 	}
 }

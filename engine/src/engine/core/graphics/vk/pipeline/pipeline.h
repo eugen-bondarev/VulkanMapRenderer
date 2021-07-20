@@ -25,7 +25,7 @@ namespace Engine
 				VkFormat image_format,
 				const BindingDescriptions &binding_descriptions = {},
 				const AttributeDescriptions &attribute_descriptions = {},
-				const SetLayouts &set_layouts = {});
+				const SetLayouts &set_layouts = {}, bool offscreen = false);
 
 			~Pipeline();
 

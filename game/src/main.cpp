@@ -72,7 +72,8 @@ void NaturaForge::Init()
 			vs_code.GetContent(), fs_code.GetContent(), 
 			ExtentToVec2(Vk::Global::swapChain->GetExtent()), VK_FORMAT_R8G8B8A8_SRGB, 
 			vertex_buffer_binding_descriptors, vertex_buffer_attribute_descriptors,
-			{ descriptorSetLayout->GetVkDescriptorSetLayout() }
+			{ descriptorSetLayout->GetVkDescriptorSetLayout() },
+			true
 		);
 	}
 
@@ -151,12 +152,13 @@ void NaturaForge::Init()
 	std::vector<VkWriteDescriptorSet> composition_write_descriptor_sets = 
 	{
 		Vk::CreateWriteDescriptorSet(compositionDescriptorSet, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &scene.ubo.perScene.buffer->GetDescriptor()),
-		Vk::CreateWriteDescriptorSet(compositionDescriptorSet, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &offScreen.texture->GetImageView()->GetDescriptor())
+		Vk::CreateWriteDescriptorSet(compositionDescriptorSet, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER , &offScreen.texture->GetImageView()->GetDescriptor())
 	};
 
 	compositionDescriptorSet->Update(composition_write_descriptor_sets);
 
 	imagesInFlight.resize(Vk::Global::swapChain->GetImageViews().size());
+
 	
 	/*
 	* It's definitely efficient to write to the command buffer once.

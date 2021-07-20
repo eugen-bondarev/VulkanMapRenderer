@@ -11,7 +11,7 @@ namespace Engine
 		class RenderPass
 		{
 		public:
-			RenderPass(VkFormat format);
+			RenderPass(VkFormat format, bool offscreen = false);
 			~RenderPass();
 
 			VkRenderPass& GetVkRenderPass();
