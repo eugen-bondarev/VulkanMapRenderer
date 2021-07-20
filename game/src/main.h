@@ -1,11 +1,13 @@
 #include <engine/engine.h>
-#include "world/map/map.h"
 
-#include "gameplay/ecs/camera.h"
-#include "gameplay/game.h"
+#include "game/world/map/map.h"
+#include "game/ecs/camera.h"
+#include "game/game.h"
+
+#include "renderer/atlas/texture_atlas.h"
+#include "renderer/atlas/tile_map.h"
 
 using namespace Engine;
-using namespace Gameplay;
 
 struct UBOScene
 {
@@ -15,7 +17,6 @@ struct UBOScene
 class NaturaForge : public App
 {
 public:
-	int amountOfInstances = 1;
 
 	void Init() override;
 	void Update() override;
@@ -24,7 +25,7 @@ public:
 private:
 	std::vector<glm::vec4> renderData;
 
-	Game* game;
+	std::unique_ptr<Game> game;
 
 	void UpdateMap();
 	void UpdateProjectionViewMatrix();
@@ -32,7 +33,6 @@ private:
 	void Present();
 
 	Vk::FrameManager* frameManager;
-	std::vector<Vk::CommandPool*> commandPools;
 	std::vector<Vk::CommandBuffer*> commandBuffers;
 	std::vector<VkFence> imagesInFlight;
 
@@ -58,11 +58,9 @@ private:
 		Vk::Pipeline* pipeline;		
 	} scene;
 
-	Vk::Image* image;
-	Vk::ImageView* imageView;
+	std::shared_ptr<BlocksTileMap> tileMap;
 
 	Vk::DescriptorPool* descriptorPool;
-
 	Vk::DescriptorSetLayout* descriptorSetLayout;
 	Vk::DescriptorSet* descriptorSet;
 };

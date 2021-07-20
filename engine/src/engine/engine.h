@@ -25,5 +25,6 @@
 #include "core/graphics/vk/image/image.h"
 #include "core/graphics/vk/image/image_view.h"
 #include "core/graphics/vk/image/sampler.h"
+#include "core/graphics/vk/image/texture2d.h"
 
 #include "core/graphics/vk/pipeline/pipeline.h"

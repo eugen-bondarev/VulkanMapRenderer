@@ -4,18 +4,32 @@
 
 void NaturaForge::Init()
 {
+	game = std::make_unique<Game>();
+
 	frameManager = new Vk::FrameManager();
 
-	glm::vec2 half_size = window->GetSize() / 2.0f;
-	scene.ubo.perScene.data.projection = glm::ortho(-half_size.x, half_size.x, -half_size.y, half_size.y);
-
+	// Create command buffers for each swap chain image.
 	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
+		commandBuffers.push_back(new Vk::CommandBuffer(Vk::Global::commandPool));
+
+	// Load image
 	{
-		Vk::CommandPool* new_command_pool = new Vk::CommandPool();
-		commandPools.push_back(new_command_pool);
-		commandBuffers.push_back(new Vk::CommandBuffer(new_command_pool));
+		const Assets::Image map_texture("assets/textures/map.png");
+
+		tileMap = TextureAtlas::Add<BlocksTileMap>(TextureAtlasType::Map, std::make_shared<BlocksTileMap>(
+			glm::vec2(8.0f),
+			map_texture.GetSize(),
+			map_texture.GetAmountOfChannels(),
+			map_texture.GetData()
+		));
+
+		tileMap->Add(BlockType::Dirt, glm::vec2(1, 1));
+		tileMap->Add(BlockType::Grass, glm::vec2(1, 7));
+		tileMap->Add(BlockType::Stone, glm::vec2(7, 1));
+		tileMap->Add(BlockType::Wood, glm::vec2(13, 1));
 	}
 
+	// Creating descriptor set layout (for the pipeline)
 	std::vector<VkDescriptorSetLayoutBinding> bindings = 
 	{
 		Vk::CreateBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
@@ -24,17 +38,9 @@ void NaturaForge::Init()
 
 	descriptorSetLayout = new Vk::DescriptorSetLayout(bindings);
 
-	{
-		const Assets::Image map_texture("assets/textures/map.png");
-		uint32_t buffer_size = map_texture.GetSize().x * map_texture.GetSize().y * map_texture.GetAmountOfChannels();
-		Vk::Buffer staging_buffer(map_texture.GetData(), buffer_size);
-
-		image = new Vk::Image(&staging_buffer, map_texture.GetSize(), map_texture.GetAmountOfChannels());
-		imageView = new Vk::ImageView(image);
-	}
-
-	Assets::Text vs_code("assets/shaders/default.vert.spv");
-	Assets::Text fs_code("assets/shaders/default.frag.spv");
+	// Creating pipeline
+	const Assets::Text vs_code("assets/shaders/default.vert.spv");
+	const Assets::Text fs_code("assets/shaders/default.frag.spv");
 
 	Vk::BindingDescriptions vertex_buffer_binding_descriptors = Util::Vector::Merge(Vk::Vertex::GetBindingDescriptions(), Vk::PerInstanceVertex::GetBindingDescriptions());
 	Vk::AttributeDescriptions vertex_buffer_attribute_descriptors = Util::Vector::Merge(Vk::Vertex::GetAttributeDescriptions(), Vk::PerInstanceVertex::GetAttributeDescriptions());
@@ -45,11 +51,14 @@ void NaturaForge::Init()
 		vertex_buffer_binding_descriptors, vertex_buffer_attribute_descriptors,
 		{ descriptorSetLayout->GetVkDescriptorSetLayout() }
 	);
+
+	// Swap chain's framebuffers will use its output
 	scene.pipeline->SetAsOutput();
 
-	{
-		scene.dynamicVertexBuffer = new Vk::Buffer(sizeof(Vk::PerInstanceVertex), 16080, nullptr, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-	}
+	// Dynamic buffer for blocks' positions
+	scene.dynamicVertexBuffer = new Vk::Buffer(sizeof(Vk::PerInstanceVertex), game->map->GetAmountOfBlocks(), nullptr, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+
+	// Loading the block's vertex & index buffers. I created a scope in order for it to free the staging buffer automatically.
 	{			
 		const std::vector<Vk::Vertex> vertices = 
 		{
@@ -72,11 +81,13 @@ void NaturaForge::Init()
 		scene.mesh.indexBuffer = new Vk::Buffer(&staging_buffer, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 	}
 
+	// Creating descriptor pool
 	descriptorPool = new Vk::DescriptorPool({
 		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 30 },
 		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 30 }
 	});
 
+	// Creating a uniform buffer (Scene scope)
 	scene.ubo.perScene.buffer = new Vk::Buffer(
 		sizeof(UBOScene),
 		1,
@@ -84,22 +95,21 @@ void NaturaForge::Init()
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
 	);
 
+	// Creating descriptor set
 	descriptorSet = new Vk::DescriptorSet(descriptorPool, { descriptorSetLayout->GetVkDescriptorSetLayout() });
 
 	std::vector<VkWriteDescriptorSet> write_descriptor_sets = 
 	{
 		Vk::CreateWriteDescriptorSet(descriptorSet, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &scene.ubo.perScene.buffer->GetDescriptor()),
-		Vk::CreateWriteDescriptorSet(descriptorSet, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &imageView->GetDescriptor())
+		Vk::CreateWriteDescriptorSet(descriptorSet, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &tileMap->GetImageView()->GetDescriptor())
 	};
 
 	descriptorSet->Update(write_descriptor_sets);
 
 	imagesInFlight.resize(Vk::Global::swapChain->GetImageViews().size());
-
-	game = new Game();
 	
 	/*
-	* It's definitely efficient to write to command buffer once.
+	* It's definitely efficient to write to the command buffer once.
 	* 
 	* But I don't know if it's going to be possible in the conditions of the game.
 	*
@@ -117,7 +127,7 @@ void NaturaForge::Init()
 					cmd->BindVertexBuffers({ scene.mesh.vertexBuffer, scene.dynamicVertexBuffer }, { 0, 0 });
 					cmd->BindIndexBuffer(scene.mesh.indexBuffer);
 						cmd->BindDescriptorSets(scene.pipeline, 1, &descriptorSet->GetVkDescriptorSet());
-						cmd->DrawIndexed(scene.mesh.indexBuffer->GetAmountOfElements(), game->map.GetAmountOfBlocks() /* TODO: Pre-calculate this! */, 0, 0, 0);
+						cmd->DrawIndexed(scene.mesh.indexBuffer->GetAmountOfElements(), game->map->GetAmountOfBlocks(), 0, 0, 0);
 			cmd->EndRenderPass();
 		cmd->End();
 	}
@@ -127,36 +137,43 @@ void NaturaForge::UpdateMap()
 {
 	if (game->camera.GetEvents() & CameraEvents_PositionChanged)
 	{
-		game->map.CalculateVisibleBlocks(game->camera.GetPosition());
-		if (!(game->map.lastVisibleBlocks.start == game->map.visibleBlocks.start && game->map.lastVisibleBlocks.end == game->map.visibleBlocks.end))
+		game->map->CalculateVisibleBlocks(game->camera.GetPosition());
+		if (!(game->map->lastVisibleBlocks.start == game->map->visibleBlocks.start && game->map->lastVisibleBlocks.end == game->map->visibleBlocks.end))
 		{
-			game->map.PopulateBlocks(game->camera.GetPosition());
+			game->map->PopulateBlocks(game->camera.GetPosition());
 
-			renderData = MapRenderer::GetRenderData(&game->map, game->camera.GetPosition());
-			scene.dynamicVertexBuffer->Update(renderData.data(), static_cast<uint32_t>(sizeof(glm::vec4) * renderData.size()));
+			{
+				std::vector<glm::vec4> render_data;
+				MapRenderer::GetRenderData(game->map.get(), game->camera.GetPosition(), render_data);
+
+				MW_PROFILER_NAMED_SCOPE("Update buffer");
+				scene.dynamicVertexBuffer->Update(render_data.data(), static_cast<uint32_t>(sizeof(glm::vec4) * game->map->GetAmountOfBlocks()));
+			}
 		}
 	}
 }
 
 void NaturaForge::UpdateProjectionViewMatrix()
 {
+	MW_PROFILER_SCOPE();
+
 	static float speed = 15.0f;
 
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_W))
 	{
-		game->camera.AddPosition(glm::vec2(0, -100) * Time::deltaTime * speed);
+		game->camera.AddPosition(glm::vec2(0, -100) * Time::GetDelta() * speed);
 	}
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_S))
 	{
-		game->camera.AddPosition(glm::vec2(0, 100) * Time::deltaTime * speed);
+		game->camera.AddPosition(glm::vec2(0, 100) * Time::GetDelta() * speed);
 	}
-	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_D))
+	// if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_D))
 	{
-		game->camera.AddPosition(glm::vec2(100, 0) * Time::deltaTime * speed);
+		game->camera.AddPosition(glm::vec2(100, 0) * Time::GetDelta() * speed);
 	}
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_A))
 	{
-		game->camera.AddPosition(glm::vec2(-100, 0) * Time::deltaTime * speed);
+		game->camera.AddPosition(glm::vec2(-100, 0) * Time::GetDelta() * speed);
 	}
 
 	if (game->camera.GetEvents() & CameraEvents_PositionChanged)
@@ -171,6 +188,8 @@ void NaturaForge::UpdateProjectionViewMatrix()
 
 void NaturaForge::Render(Vk::CommandBuffer* cmd)
 {		
+	MW_PROFILER_SCOPE();
+
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
 
 	vkResetFences(Vk::Global::device->GetVkDevice(), 1, &current_frame->GetInFlightFence());
@@ -185,6 +204,8 @@ void NaturaForge::Render(Vk::CommandBuffer* cmd)
 
 void NaturaForge::Present()
 {
+	MW_PROFILER_SCOPE();
+
 	VkResult result = Vk::Global::swapChain->Present(&frameManager->GetCurrentFrame()->GetRenderFinishedSemaphore(), 1);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) 
@@ -201,6 +222,8 @@ void NaturaForge::Present()
 
 void NaturaForge::Update()
 {
+	MW_PROFILER_SCOPE();
+
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
 
 	uint32_t image_index = Vk::Global::swapChain->AcquireImage(current_frame->GetImageAvailableSemaphore());
@@ -213,31 +236,32 @@ void NaturaForge::Update()
 
 	imagesInFlight[image_index] = current_frame->GetInFlightFence();
 
-	Vk::CommandPool* current_command_pool = commandPools[image_index];
 	Vk::CommandBuffer* current_command_buffer = commandBuffers[image_index];	
 
 	game->camera.CheckPositionChange();
 	UpdateProjectionViewMatrix();
 	UpdateMap();
+
 	Render(current_command_buffer);
 	Present();
 
-	static float timer = 0.0f;
-	timer += Time::deltaTime;
+	static float exit_timer = 0.0f;
+	exit_timer += Time::GetDelta();
 	
-	if (timer >= 1.0f)
+	if (exit_timer >= 10.0f)
 	{
 		LOG_OUT("Average FPS: {0}", Time::GetAverageFPS());
-		timer = 0.0f;
+		exit_timer = 0.0f;
+		// exit(0);
+		glfwSetWindowShouldClose(window->GetGLFWWindow(), 1);
 	}
 }
 
 void NaturaForge::Shutdown()
 {
 	Vk::Global::device->WaitIdle();
-
-	delete imageView;
-	delete image;
+	
+	tileMap.reset();
 
 	delete descriptorSet;
 	delete descriptorPool;
@@ -250,12 +274,8 @@ void NaturaForge::Shutdown()
 
 	delete scene.dynamicVertexBuffer;
 
-	VK_ASSERT(commandBuffers.size() == commandPools.size());
 	for (int i = 0; i < commandBuffers.size(); i++)
-	{
 		delete commandBuffers[i];
-		delete commandPools[i];
-	}
 
 	delete frameManager;
 }

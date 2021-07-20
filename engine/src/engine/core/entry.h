@@ -10,6 +10,7 @@
 #define ENTRY()														\
 int main(int amount_of_arguments, char* arguments[])				\
 {																	\
+	MW_PROFILER_BEGIN("Forgio");									\
 	using namespace Engine;											\
 	Assets::LocateRoot(amount_of_arguments, arguments);				\
 	window = new Window({ 1920, 1080 }, Window::Mode::Borderless);	\
@@ -27,5 +28,6 @@ int main(int amount_of_arguments, char* arguments[])				\
 	delete app;														\
 	Vk::Shutdown();													\
 	delete window;													\
+	MW_PROFILER_END();												\
 	return 0;														\
 }

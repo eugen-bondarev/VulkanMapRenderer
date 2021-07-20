@@ -28,6 +28,11 @@ namespace Engine
 			fps.amount++;
 		}
 
+		float GetDelta()
+		{
+			return deltaTime;
+		}
+
 		float GetFPS()
 		{
 			return 1.0f / deltaTime;

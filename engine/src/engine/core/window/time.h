@@ -6,10 +6,9 @@ namespace Engine
 {
 	namespace Time
 	{
-		extern float deltaTime;
-
 		void BeginMeasurement();
 		void EndMeasurement();
+		float GetDelta();
 		float GetFPS();
 		float GetAverageFPS();
 	}
