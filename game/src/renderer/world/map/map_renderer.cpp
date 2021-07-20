@@ -49,7 +49,7 @@ namespace MapRenderer
 	* Note: parallelism doesn't work well here
 	*/
 	void GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& data)
-	{		
+	{
 		MW_PROFILER_SCOPE();
 
 		BlocksTileMap *blocksTileMap = TextureAtlas::Get<BlocksTileMap>(TextureAtlasType::Map);

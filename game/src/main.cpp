@@ -167,7 +167,7 @@ void NaturaForge::UpdateProjectionViewMatrix()
 	{
 		game->camera.AddPosition(glm::vec2(0, 100) * Time::GetDelta() * speed);
 	}
-	// if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_D))
+	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_D))
 	{
 		game->camera.AddPosition(glm::vec2(100, 0) * Time::GetDelta() * speed);
 	}
@@ -205,18 +205,7 @@ void NaturaForge::Render(Vk::CommandBuffer* cmd)
 void NaturaForge::Present()
 {
 	MW_PROFILER_SCOPE();
-
-	VkResult result = Vk::Global::swapChain->Present(&frameManager->GetCurrentFrame()->GetRenderFinishedSemaphore(), 1);
-
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) 
-	{
-		
-	} 
-	else if (result != VK_SUCCESS) 
-	{
-		THROW("Can't present.");
-	}
-
+	Vk::Global::swapChain->Present(&frameManager->GetCurrentFrame()->GetRenderFinishedSemaphore(), 1);
 	frameManager->NextFrame();
 }
 
@@ -225,7 +214,6 @@ void NaturaForge::Update()
 	MW_PROFILER_SCOPE();
 
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
-
 	uint32_t image_index = Vk::Global::swapChain->AcquireImage(current_frame->GetImageAvailableSemaphore());
 
 	if (imagesInFlight[image_index] != VK_NULL_HANDLE) 
@@ -236,11 +224,13 @@ void NaturaForge::Update()
 
 	imagesInFlight[image_index] = current_frame->GetInFlightFence();
 
-	Vk::CommandBuffer* current_command_buffer = commandBuffers[image_index];	
-
+	// Game logic
 	game->camera.CheckPositionChange();
 	UpdateProjectionViewMatrix();
 	UpdateMap();
+
+	// Renderer
+	Vk::CommandBuffer* current_command_buffer = commandBuffers[image_index];
 
 	Render(current_command_buffer);
 	Present();
@@ -248,12 +238,11 @@ void NaturaForge::Update()
 	static float exit_timer = 0.0f;
 	exit_timer += Time::GetDelta();
 	
-	if (exit_timer >= 10.0f)
+	if (exit_timer >= 1.0f)
 	{
 		LOG_OUT("Average FPS: {0}", Time::GetAverageFPS());
 		exit_timer = 0.0f;
-		// exit(0);
-		glfwSetWindowShouldClose(window->GetGLFWWindow(), 1);
+		// glfwSetWindowShouldClose(window->GetGLFWWindow(), 1);
 	}
 }
 
