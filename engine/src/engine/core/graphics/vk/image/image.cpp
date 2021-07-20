@@ -110,7 +110,7 @@ namespace Engine
 			}
 		}
 
-		Image::Image(Buffer* buffer, glm::vec2 size, int amount_of_channels)
+		Image::Image(Buffer* buffer, glm::vec2 size, int amount_of_channels, VkImageUsageFlags usage_flags)
 		{
 			VkImageCreateInfo image_info{};
 			image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -123,7 +123,7 @@ namespace Engine
 			image_info.format = VK_FORMAT_R8G8B8A8_SRGB;
 			image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
 			image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+			image_info.usage = usage_flags;
 			image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			image_info.samples = VK_SAMPLE_COUNT_1_BIT;
 			image_info.flags = 0; // Optional

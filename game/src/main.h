@@ -42,7 +42,13 @@ private:
 		{
 			Vk::Buffer* vertexBuffer;
 			Vk::Buffer* indexBuffer;
-		} mesh;
+		} canvas;
+
+		struct 
+		{
+			Vk::Buffer* vertexBuffer;
+			Vk::Buffer* indexBuffer;
+		} block;
 		
 		Vk::Buffer* dynamicVertexBuffer;
 
@@ -55,14 +61,24 @@ private:
 			} perScene;
 		} ubo;
 
-		Vk::Pipeline* pipeline;		
+		Vk::Pipeline* offScreenPipeline;
+
+		Vk::Pipeline* pipeline;
 	} scene;
+
+	struct
+	{
+		Vk::Texture2D* texture;
+		Vk::Framebuffer* framebuffer;
+	} offScreen;
 
 	std::shared_ptr<BlocksTileMap> tileMap;
 
 	Vk::DescriptorPool* descriptorPool;
 	Vk::DescriptorSetLayout* descriptorSetLayout;
-	Vk::DescriptorSet* descriptorSet;
+	
+	Vk::DescriptorSet* offScreenDescriptorSet;
+	Vk::DescriptorSet* compositionDescriptorSet;
 };
 
 App* ::Engine::GetApp()

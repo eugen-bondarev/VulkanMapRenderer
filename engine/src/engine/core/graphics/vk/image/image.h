@@ -17,7 +17,7 @@ namespace Engine
 		class Image
 		{
 		public:
-			Image(Buffer* buffer, glm::vec2 size, int amount_of_channels);
+			Image(Buffer* buffer, glm::vec2 size, int amount_of_channels, VkImageUsageFlags usage_flags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
 			~Image();
 
 			VkImage& GetVkImage();
