@@ -11,11 +11,11 @@ namespace Engine
 			const std::string &vs_code,
 			const std::string &fs_code,
 			const glm::vec2 &viewport_size,
-			VkFormat image_format,
+			const std::vector<VkAttachmentDescription>& attachments,
 			const BindingDescriptions &binding_descriptions,
 			const AttributeDescriptions &attribute_descriptions,
-			const SetLayouts &set_layouts,
-			bool offscreen)
+			const SetLayouts &set_layouts
+		)
 		{
 			shader = new Shader(vs_code, fs_code);
 
@@ -117,7 +117,7 @@ namespace Engine
 
 			VK_CHECK(vkCreatePipelineLayout(Global::device->GetVkDevice(), &pipeline_layout_info, nullptr, &vkPipelineLayout), "Failed to create pipeline layout.");
 
-			renderPass = new RenderPass(image_format, offscreen);
+			renderPass = new RenderPass(attachments);
 
 			VkGraphicsPipelineCreateInfo pipeline_info{};
 			pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

@@ -22,10 +22,11 @@ namespace Engine
 				const std::string &vs_code,
 				const std::string &fs_code,
 				const glm::vec2 &viewport_size,
-				VkFormat image_format,
+				const std::vector<VkAttachmentDescription>& attachments,
 				const BindingDescriptions &binding_descriptions = {},
 				const AttributeDescriptions &attribute_descriptions = {},
-				const SetLayouts &set_layouts = {}, bool offscreen = false);
+				const SetLayouts &set_layouts = {}
+			);
 
 			~Pipeline();
 

@@ -61,24 +61,39 @@ private:
 			} perScene;
 		} ubo;
 
-		Vk::Pipeline* offScreenPipeline;
 
-		Vk::Pipeline* pipeline;
 	} scene;
 
 	struct
 	{
+		Vk::DescriptorPool* descriptorPool;
+		Vk::DescriptorSetLayout* descriptorSetLayout;
+	} common;
+
+	struct
+	{
+		Vk::Pipeline* pipeline;
 		Vk::Texture2D* texture;
 		Vk::Framebuffer* framebuffer;
-	} offScreen;
+
+		Vk::DescriptorSet* descriptorSet;
+	} offscreen;
+
+	void InitOffscreenPipeline();
+
+	struct
+	{
+		Vk::Pipeline* pipeline;
+
+		Vk::DescriptorSet* descriptorSet;
+	} composition;
+
+	void InitCompositionPipeline();
+
+	void FillCommandBuffers();
 
 	std::shared_ptr<BlocksTileMap> tileMap;
-
-	Vk::DescriptorPool* descriptorPool;
-	Vk::DescriptorSetLayout* descriptorSetLayout;
 	
-	Vk::DescriptorSet* offScreenDescriptorSet;
-	Vk::DescriptorSet* compositionDescriptorSet;
 };
 
 App* ::Engine::GetApp()
