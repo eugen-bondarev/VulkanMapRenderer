@@ -46,7 +46,7 @@ void NaturaForge::InitOffscreenPipelineResources()
 	offscreen.pipeline = new Vk::Pipeline(
 		vs_code.GetContent(), fs_code.GetContent(), 
 		ExtentToVec2(Vk::Global::swapChain->GetExtent()),
-		{ Vk::Util::CreateAttachment(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) },
+		{ Vk::Util::CreateAttachment(VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) },
 		binding_descriptors, attribute_descriptors,
 		{ offscreen.descriptorSetLayout->GetVkDescriptorSetLayout() }
 	);

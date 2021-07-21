@@ -99,9 +99,7 @@ private:
 	void InitImGui();
 	void ShutdownImGui();
 
-	// Vk::Pipeline* imGuiPipeline;
 	Vk::RenderPass* imGuiRenderPass;
-
 	std::vector<Vk::CommandPool*> imGuiCommandPools;
 	std::vector<Vk::CommandBuffer*> imGuiCommandBuffers;
 	void FillImGuiCommandBuffers();
