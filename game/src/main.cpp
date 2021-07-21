@@ -303,7 +303,7 @@ void NaturaForge::Init()
 
 	InitImGui();
 
-	userTextureID = ImGui_ImplVulkan_AddTexture(tileMap->GetImageView()->GetDescriptor().sampler, tileMap->GetImageView()->GetDescriptor().imageView, tileMap->GetImageView()->GetDescriptor().imageLayout);
+	// userTextureID = ImGui_ImplVulkan_AddTexture(tileMap->GetImageView()->GetDescriptor().sampler, tileMap->GetImageView()->GetDescriptor().imageView, tileMap->GetImageView()->GetDescriptor().imageLayout);
 }
 
 void NaturaForge::UpdateMap()
@@ -370,42 +370,43 @@ void NaturaForge::Render(Vk::CommandBuffer* cmd)
 	cmd->SubmitToQueue(
 		Vk::Global::Queues::graphicsQueue, 
 		&current_frame->GetImageAvailableSemaphore(), 
-		&current_frame->GetRenderFinishedSemaphore()
-		, current_frame->GetInFlightFence()
+		&current_frame->GetRenderFinishedSemaphore(), 
+		current_frame->GetInFlightFence()
 	);
 }
 
 void NaturaForge::FillImGuiCommandBuffers()
 {
+	MW_PROFILER_SCOPE();
+
 	Vk::CommandPool* pool = imGuiCommandPools[Vk::Global::swapChain->GetCurrentImageIndex()];
 	Vk::CommandBuffer* cmd = imGuiCommandBuffers[Vk::Global::swapChain->GetCurrentImageIndex()];
 	Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetCurrentScreenFramebuffer();
 
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
 	
-	pool->Reset();
-	cmd->Begin();
-		cmd->BeginRenderPass(imGuiRenderPass, framebuffer);					
-			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->GetVkCommandBuffer());
-		cmd->EndRenderPass();
-	cmd->End();
+	auto a = std::async(std::launch::async, [&]()
+	{
+		pool->Reset();
+		cmd->Begin();
+			cmd->BeginRenderPass(imGuiRenderPass, framebuffer);					
+				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->GetVkCommandBuffer());
+			cmd->EndRenderPass();
+		cmd->End();
 
-	cmd->SubmitToQueue(
-		Vk::Global::Queues::graphicsQueue,
-		&current_frame->GetRenderFinishedSemaphore(),
-		&current_frame->GetImGuiRenderFinishedSemaphore()
-	);
+		cmd->SubmitToQueue(
+			Vk::Global::Queues::graphicsQueue,
+			&current_frame->GetRenderFinishedSemaphore(),
+			&current_frame->GetImGuiRenderFinishedSemaphore()
+		);
+	});
 }
 
 void NaturaForge::Present()
 {
 	MW_PROFILER_SCOPE();
-	VkSemaphore* semaphores[] = 
-	{ 
-		// &frameManager->GetCurrentFrame()->GetRenderFinishedSemaphore(), 
-		&frameManager->GetCurrentFrame()->GetImGuiRenderFinishedSemaphore() 
-	};
-	Vk::Global::swapChain->Present(semaphores[0], 1);
+
+	Vk::Global::swapChain->Present(&frameManager->GetCurrentFrame()->GetImGuiRenderFinishedSemaphore(), 1);
 	frameManager->NextFrame();
 }
 
@@ -416,11 +417,15 @@ void NaturaForge::Update()
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-		ImGui::ShowDemoWindow();
-
-		ImGui::Begin("Img");
-			ImGui::Image((ImTextureID)userTextureID, ImVec2(600, 600));
+		// ImGui::ShowDemoWindow();
+		// ImGui::ShowMetricsWindow(nullptr);
+		ImGui::Begin("Info");
+			ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 		ImGui::End();
+
+		// ImGui::Begin("Img");
+		// 	ImGui::Image((ImTextureID)userTextureID, ImVec2(600, 600));
+		// ImGui::End();
 	ImGui::Render();
 
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
@@ -444,18 +449,7 @@ void NaturaForge::Update()
 
 	Render(current_command_buffer);
 	FillImGuiCommandBuffers();
-
 	Present();
-
-	static float exit_timer = 0.0f;
-	exit_timer += Time::GetDelta();
-	
-	if (exit_timer >= 1.0f)
-	{
-		LOG_OUT("Average FPS: {0}", Time::GetAverageFPS());
-		exit_timer = 0.0f;
-		// glfwSetWindowShouldClose(window->GetGLFWWindow(), 1);
-	}
 
 	// Update and Render additional Platform Windows		
 	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)

@@ -32,12 +32,7 @@ namespace MapRenderer
 
 					const glm::vec2 block_texture_tile = base_tile + function(blocks, x, y);
 
-					static std::mutex lock_guard_mutex;
-
-					{
-						std::lock_guard<std::mutex> lock(lock_guard_mutex);
-						data.emplace_back(blocks[x][y].worldPosition, block_texture_tile);
-					}
+					data.emplace_back(blocks[x][y].worldPosition, block_texture_tile);
 
 					last_type = blocks[x][y].type;
 				}
