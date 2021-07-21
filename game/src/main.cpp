@@ -219,7 +219,7 @@ void NaturaForge::FillCommandBuffers()
 
 void NaturaForge::InitImGui()
 {
-	imGuiRenderPass = new Vk::RenderPass(
+	imgui.renderPass = new Vk::RenderPass(
 		{ Vk::Util::CreateAttachment(
 			Vk::Global::swapChain->GetImageFormat(), 
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 
@@ -237,15 +237,6 @@ void NaturaForge::InitImGui()
 
 	ImGui::StyleColorsDark();
 
-	// for (int i = 0; i < ImGuiCol_COUNT; i++)
-	// {
-	// 	float x = pow(ImGui::GetStyle().Colors[i].x, 2.2f);
-	// 	float y = pow(ImGui::GetStyle().Colors[i].y, 2.2f);
-	// 	float z = pow(ImGui::GetStyle().Colors[i].z, 2.2f);
-	// 	float w = pow(ImGui::GetStyle().Colors[i].w, 1.f);
-	// 	ImGui::GetStyle().Colors[i] = ImVec4(x, y, z, w);
-	// }
-
 	ImGui_ImplGlfw_InitForVulkan(window->GetGLFWWindow(), true);
 	ImGui_ImplVulkan_InitInfo init_info = {};
 	init_info.Instance = Vk::Global::instance->GetVkInstance();
@@ -259,7 +250,7 @@ void NaturaForge::InitImGui()
 	init_info.MinImageCount = 2;
 	init_info.ImageCount = 2;
 	init_info.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init_info, imGuiRenderPass->GetVkRenderPass());
+	ImGui_ImplVulkan_Init(&init_info, imgui.renderPass->GetVkRenderPass());
 
 	Vk::CommandBuffer my_command_buffer(Vk::Global::commandPool);
 
@@ -275,10 +266,10 @@ void NaturaForge::InitImGui()
 	// Create command buffers for each swap chain image.
 	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
 	{
-		// imGuiCommandPool = new Vk::CommandPool();
-		Vk::CommandPool* imGuiCommandPool = new Vk::CommandPool();
-		imGuiCommandBuffers.push_back(new Vk::CommandBuffer(imGuiCommandPool));
-		imGuiCommandPools.push_back(imGuiCommandPool);
+		// imgui.commandPool = new Vk::CommandPool();
+		Vk::CommandPool* commandPool = new Vk::CommandPool();
+		imgui.commandBuffers.push_back(new Vk::CommandBuffer(commandPool));
+		imgui.commandPools.push_back(commandPool);
 	}
 }
 
@@ -379,8 +370,8 @@ void NaturaForge::FillImGuiCommandBuffers()
 {
 	MW_PROFILER_SCOPE();
 
-	Vk::CommandPool* pool = imGuiCommandPools[Vk::Global::swapChain->GetCurrentImageIndex()];
-	Vk::CommandBuffer* cmd = imGuiCommandBuffers[Vk::Global::swapChain->GetCurrentImageIndex()];
+	Vk::CommandPool* pool = imgui.commandPools[Vk::Global::swapChain->GetCurrentImageIndex()];
+	Vk::CommandBuffer* cmd = imgui.commandBuffers[Vk::Global::swapChain->GetCurrentImageIndex()];
 	Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetCurrentScreenFramebuffer();
 
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
@@ -389,7 +380,7 @@ void NaturaForge::FillImGuiCommandBuffers()
 	{
 		pool->Reset();
 		cmd->Begin();
-			cmd->BeginRenderPass(imGuiRenderPass, framebuffer);					
+			cmd->BeginRenderPass(imgui.renderPass, framebuffer);					
 				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->GetVkCommandBuffer());
 			cmd->EndRenderPass();
 		cmd->End();
@@ -465,14 +456,14 @@ void NaturaForge::ShutdownImGui()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
-	for (auto& buffer : imGuiCommandBuffers)
+	for (auto& buffer : imgui.commandBuffers)
 		delete buffer;
 
-	for (auto& pool : imGuiCommandPools)
+	for (auto& pool : imgui.commandPools)
 		delete pool;
 
 	// delete imGuiPipeline;
-	delete imGuiRenderPass;
+	delete imgui.renderPass;
 }
 
 void NaturaForge::Shutdown()

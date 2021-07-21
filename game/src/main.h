@@ -99,9 +99,12 @@ private:
 	void InitImGui();
 	void ShutdownImGui();
 
-	Vk::RenderPass* imGuiRenderPass;
-	std::vector<Vk::CommandPool*> imGuiCommandPools;
-	std::vector<Vk::CommandBuffer*> imGuiCommandBuffers;
+	struct
+	{
+		Vk::RenderPass* renderPass;
+		std::vector<Vk::CommandPool*> commandPools;
+		std::vector<Vk::CommandBuffer*> commandBuffers;
+	} imgui;
 	void FillImGuiCommandBuffers();
 
 	std::shared_ptr<BlocksTileMap> tileMap;
