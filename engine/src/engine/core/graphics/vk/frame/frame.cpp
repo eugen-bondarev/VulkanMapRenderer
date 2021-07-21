@@ -17,6 +17,7 @@ namespace Engine
 
 			VK_CHECK(vkCreateSemaphore(Vk::Global::device->GetVkDevice(), &semaphore_info, nullptr, &imageAvailable), "Failed to create semaphore 1");
 			VK_CHECK(vkCreateSemaphore(Vk::Global::device->GetVkDevice(), &semaphore_info, nullptr, &renderFinished), "Failed to create semaphore 2");
+			VK_CHECK(vkCreateSemaphore(Vk::Global::device->GetVkDevice(), &semaphore_info, nullptr, &imGuiRenderFinished), "Failed to create semaphore 2");
 			VK_CHECK(vkCreateFence(Vk::Global::device->GetVkDevice(), &fence_info, nullptr, &inFlightFence), "Failed to create fence 1");
 		}
 
@@ -24,6 +25,7 @@ namespace Engine
 		{
 			vkDestroySemaphore(Vk::Global::device->GetVkDevice(), imageAvailable, nullptr);
 			vkDestroySemaphore(Vk::Global::device->GetVkDevice(), renderFinished, nullptr);
+			vkDestroySemaphore(Vk::Global::device->GetVkDevice(), imGuiRenderFinished, nullptr);
 			vkDestroyFence(Vk::Global::device->GetVkDevice(), inFlightFence, nullptr);
 		}
 
@@ -35,6 +37,11 @@ namespace Engine
 		VkSemaphore& Frame::GetRenderFinishedSemaphore()
 		{
 			return renderFinished;
+		}
+
+		VkSemaphore& Frame::GetImGuiRenderFinishedSemaphore()
+		{
+			return imGuiRenderFinished;
 		}
 
 		VkFence& Frame::GetInFlightFence()

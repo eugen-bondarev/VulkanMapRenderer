@@ -129,16 +129,65 @@ namespace Engine
 			}
 
 			VkSurfaceFormatKHR SwapChain::ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availalbe_formats)
-			{
-				for (const auto &available_format : availalbe_formats)
+			{				
+				VkFormat colorFormat;
+				VkColorSpaceKHR colorSpace;
+				VkSurfaceFormatKHR format;
+
+				// Get list of supported surface formats
+				uint32_t formatCount;
+				vkGetPhysicalDeviceSurfaceFormatsKHR(Global::device->GetVkPhysicalDevice(), Global::surface->GetVkSurface(), &formatCount, NULL);				
+				assert(formatCount > 0);
+
+				std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
+				vkGetPhysicalDeviceSurfaceFormatsKHR(Global::device->GetVkPhysicalDevice(), Global::surface->GetVkSurface(), &formatCount, surfaceFormats.data());
+
+				// If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
+				// there is no preferred format, so we assume VK_FORMAT_B8G8R8A8_UNORM
+				if ((formatCount == 1) && (surfaceFormats[0].format == VK_FORMAT_UNDEFINED))
 				{
-					if (available_format.format == VK_FORMAT_B8G8R8A8_SRGB && available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+					colorFormat = VK_FORMAT_B8G8R8A8_UNORM;
+					colorSpace = surfaceFormats[0].colorSpace;
+				}
+				else
+				{
+					// iterate over the list of available surface format and
+					// check for the presence of VK_FORMAT_B8G8R8A8_UNORM
+					bool found_B8G8R8A8_UNORM = false;
+					for (auto&& surfaceFormat : surfaceFormats)
 					{
-						return available_format;
+						if (surfaceFormat.format == VK_FORMAT_B8G8R8A8_UNORM)
+						{
+							colorFormat = surfaceFormat.format;
+							colorSpace = surfaceFormat.colorSpace;
+							found_B8G8R8A8_UNORM = true;
+							break;
+						}
+					}
+
+					// in case VK_FORMAT_B8G8R8A8_UNORM is not available
+					// select the first available color format
+					if (!found_B8G8R8A8_UNORM)
+					{
+						colorFormat = surfaceFormats[0].format;
+						colorSpace = surfaceFormats[0].colorSpace;
 					}
 				}
 
-				return availalbe_formats[0];
+				format.colorSpace = colorSpace;
+				format.format = colorFormat;
+
+				return format;
+
+				// for (const auto &available_format : availalbe_formats)
+				// {
+				// 	if (available_format.format == VK_FORMAT_B8G8R8A8_SRGB && available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+				// 	{
+				// 		return available_format;
+				// 	}
+				// }
+
+				// return availalbe_formats[0];
 			}
 
 			VkPresentModeKHR SwapChain::ChoosePresentMode(const std::vector<VkPresentModeKHR> &available_present_modes)

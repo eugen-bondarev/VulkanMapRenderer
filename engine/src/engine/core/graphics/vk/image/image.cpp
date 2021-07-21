@@ -128,7 +128,8 @@ namespace Engine
 			image_info.extent.depth = 1;
 			image_info.mipLevels = 1;
 			image_info.arrayLayers = 1;
-			image_info.format = VK_FORMAT_R8G8B8A8_SRGB;
+			// image_info.format = VK_FORMAT_R8G8B8A8_SRGB;
+			image_info.format = VK_FORMAT_R8G8B8A8_UNORM;
 			image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
 			image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			image_info.usage = usage_flags;

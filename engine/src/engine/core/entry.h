@@ -13,7 +13,7 @@ int main(int amount_of_arguments, char* arguments[])				\
 	MW_PROFILER_BEGIN("Forgio");									\
 	using namespace Engine;											\
 	Assets::LocateRoot(amount_of_arguments, arguments);				\
-	window = new Window({ 1920, 1080 }, Window::Mode::Borderless);	\
+	window = new Window({ 1920, 1080 }, Window::Mode::Fullscreen);	\
 	Vk::Bootstrap();												\
 	App* app = GetApp();											\
 	app->Init();													\

@@ -2,6 +2,8 @@
 
 #include "renderer/world/map/map_renderer.h"
 
+#include <future>
+
 void NaturaForge::InitCommonResources()
 {
 	// Creating descriptor set layout (for the pipeline)
@@ -11,12 +13,25 @@ void NaturaForge::InitCommonResources()
 		Vk::CreateBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 	};
 
-	common.descriptorSetLayout = new Vk::DescriptorSetLayout(bindings);
+	offscreen.descriptorSetLayout = new Vk::DescriptorSetLayout(bindings);
 
 	// Creating descriptor pool
 	common.descriptorPool = new Vk::DescriptorPool({
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 30 },
-		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 30 }
+		// { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 30 },
+		// { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 30 }
+		
+		{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
 	});
 }
 
@@ -33,7 +48,7 @@ void NaturaForge::InitOffscreenPipelineResources()
 		ExtentToVec2(Vk::Global::swapChain->GetExtent()),
 		{ Vk::Util::CreateAttachment(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) },
 		binding_descriptors, attribute_descriptors,
-		{ common.descriptorSetLayout->GetVkDescriptorSetLayout() }
+		{ offscreen.descriptorSetLayout->GetVkDescriptorSetLayout() }
 	);
 
 	offscreen.texture = new Vk::Texture2D(window->GetSize(), 4, nullptr, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
@@ -63,7 +78,7 @@ void NaturaForge::InitOffscreenPipelineResources()
 	tileMap->Add(BlockType::Wood, glm::vec2(13, 1));
 
 	// Creating descriptor set
-	offscreen.descriptorSet = new Vk::DescriptorSet(common.descriptorPool, { common.descriptorSetLayout->GetVkDescriptorSetLayout() });
+	offscreen.descriptorSet = new Vk::DescriptorSet(common.descriptorPool, { offscreen.descriptorSetLayout->GetVkDescriptorSetLayout() });
 
 	std::vector<VkWriteDescriptorSet> offscreen_write_descriptor_sets = 
 	{
@@ -119,7 +134,14 @@ void NaturaForge::InitCompositionPipelineResources()
 	composition.pipeline = new Vk::Pipeline(
 		vs_code.GetContent(), fs_code.GetContent(), 
 		ExtentToVec2(Vk::Global::swapChain->GetExtent()),
-		{ Vk::Util::CreateAttachment(Vk::Global::swapChain->GetImageFormat()) },
+		{ Vk::Util::CreateAttachment(
+			Vk::Global::swapChain->GetImageFormat(), 
+			VK_IMAGE_LAYOUT_UNDEFINED, 
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+			/**
+			 * NOTE: Get rid of this if I don't render ImGui above.
+			 */
+		) },
 		vertex_buffer_binding_descriptors, vertex_buffer_attribute_descriptors,
 		{ composition.descriptorSetLayout->GetVkDescriptorSetLayout() }
 	);
@@ -150,7 +172,7 @@ void NaturaForge::InitCompositionPipelineResources()
 		composition.canvas.indexBuffer = new Vk::Buffer(&staging_buffer, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 	}
 
-	composition.descriptorSet = new Vk::DescriptorSet(common.descriptorPool, { common.descriptorSetLayout->GetVkDescriptorSetLayout() });
+	composition.descriptorSet = new Vk::DescriptorSet(common.descriptorPool, { composition.descriptorSetLayout->GetVkDescriptorSetLayout() });
 
 	std::vector<VkWriteDescriptorSet> composition_write_descriptor_sets = 
 	{
@@ -195,11 +217,78 @@ void NaturaForge::FillCommandBuffers()
 	}
 }
 
+void NaturaForge::InitImGui()
+{
+	imGuiRenderPass = new Vk::RenderPass(
+		{ Vk::Util::CreateAttachment(
+			Vk::Global::swapChain->GetImageFormat(), 
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 
+			// VK_IMAGE_LAYOUT_UNDEFINED, 
+			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
+			VK_ATTACHMENT_LOAD_OP_LOAD, 
+			VK_ATTACHMENT_STORE_OP_STORE
+		) }
+	);
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+	ImGui::StyleColorsDark();
+
+	// for (int i = 0; i < ImGuiCol_COUNT; i++)
+	// {
+	// 	float x = pow(ImGui::GetStyle().Colors[i].x, 2.2f);
+	// 	float y = pow(ImGui::GetStyle().Colors[i].y, 2.2f);
+	// 	float z = pow(ImGui::GetStyle().Colors[i].z, 2.2f);
+	// 	float w = pow(ImGui::GetStyle().Colors[i].w, 1.f);
+	// 	ImGui::GetStyle().Colors[i] = ImVec4(x, y, z, w);
+	// }
+
+	ImGui_ImplGlfw_InitForVulkan(window->GetGLFWWindow(), true);
+	ImGui_ImplVulkan_InitInfo init_info = {};
+	init_info.Instance = Vk::Global::instance->GetVkInstance();
+	init_info.PhysicalDevice = Vk::Global::device->GetVkPhysicalDevice();
+	init_info.Device = Vk::Global::device->GetVkDevice();
+	init_info.QueueFamily = Vk::Global::Queues::indices.graphicsFamily.value();
+	init_info.Queue = Vk::Global::Queues::graphicsQueue;
+	init_info.PipelineCache = nullptr;
+	init_info.DescriptorPool = common.descriptorPool->GetVkDescriptorPool();
+	init_info.Allocator = nullptr;
+	init_info.MinImageCount = 2;
+	init_info.ImageCount = 2;
+	init_info.CheckVkResultFn = nullptr;
+	ImGui_ImplVulkan_Init(&init_info, imGuiRenderPass->GetVkRenderPass());
+
+	Vk::CommandBuffer my_command_buffer(Vk::Global::commandPool);
+
+	my_command_buffer.Begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+		ImGui_ImplVulkan_CreateFontsTexture(my_command_buffer.GetVkCommandBuffer());
+	my_command_buffer.End();
+
+	my_command_buffer.SubmitToQueue(Vk::Global::Queues::graphicsQueue);
+
+	vkDeviceWaitIdle(Vk::Global::device->GetVkDevice());
+	ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+	// Create command buffers for each swap chain image.
+	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
+	{
+		// imGuiCommandPool = new Vk::CommandPool();
+		Vk::CommandPool* imGuiCommandPool = new Vk::CommandPool();
+		imGuiCommandBuffers.push_back(new Vk::CommandBuffer(imGuiCommandPool));
+		imGuiCommandPools.push_back(imGuiCommandPool);
+	}
+}
+
+ImTextureID userTextureID;
+
 void NaturaForge::Init()
 {
 	game = std::make_unique<Game>();
 
-	frameManager = new Vk::FrameManager();
+	frameManager = new Vk::FrameManager(2);
 
 	imagesInFlight.resize(Vk::Global::swapChain->GetImageViews().size());
 
@@ -211,6 +300,10 @@ void NaturaForge::Init()
 	InitOffscreenPipelineResources();
 	InitCompositionPipelineResources();
 	FillCommandBuffers();
+
+	InitImGui();
+
+	userTextureID = ImGui_ImplVulkan_AddTexture(tileMap->GetImageView()->GetDescriptor().sampler, tileMap->GetImageView()->GetDescriptor().imageView, tileMap->GetImageView()->GetDescriptor().imageLayout);
 }
 
 void NaturaForge::UpdateMap()
@@ -277,21 +370,58 @@ void NaturaForge::Render(Vk::CommandBuffer* cmd)
 	cmd->SubmitToQueue(
 		Vk::Global::Queues::graphicsQueue, 
 		&current_frame->GetImageAvailableSemaphore(), 
-		&current_frame->GetRenderFinishedSemaphore(), 
-		current_frame->GetInFlightFence()
+		&current_frame->GetRenderFinishedSemaphore()
+		, current_frame->GetInFlightFence()
+	);
+}
+
+void NaturaForge::FillImGuiCommandBuffers()
+{
+	Vk::CommandPool* pool = imGuiCommandPools[Vk::Global::swapChain->GetCurrentImageIndex()];
+	Vk::CommandBuffer* cmd = imGuiCommandBuffers[Vk::Global::swapChain->GetCurrentImageIndex()];
+	Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetCurrentScreenFramebuffer();
+
+	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
+	
+	pool->Reset();
+	cmd->Begin();
+		cmd->BeginRenderPass(imGuiRenderPass, framebuffer);					
+			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->GetVkCommandBuffer());
+		cmd->EndRenderPass();
+	cmd->End();
+
+	cmd->SubmitToQueue(
+		Vk::Global::Queues::graphicsQueue,
+		&current_frame->GetRenderFinishedSemaphore(),
+		&current_frame->GetImGuiRenderFinishedSemaphore()
 	);
 }
 
 void NaturaForge::Present()
 {
 	MW_PROFILER_SCOPE();
-	Vk::Global::swapChain->Present(&frameManager->GetCurrentFrame()->GetRenderFinishedSemaphore(), 1);
+	VkSemaphore* semaphores[] = 
+	{ 
+		// &frameManager->GetCurrentFrame()->GetRenderFinishedSemaphore(), 
+		&frameManager->GetCurrentFrame()->GetImGuiRenderFinishedSemaphore() 
+	};
+	Vk::Global::swapChain->Present(semaphores[0], 1);
 	frameManager->NextFrame();
 }
 
 void NaturaForge::Update()
 {
 	MW_PROFILER_SCOPE();
+	
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+		ImGui::ShowDemoWindow();
+
+		ImGui::Begin("Img");
+			ImGui::Image((ImTextureID)userTextureID, ImVec2(600, 600));
+		ImGui::End();
+	ImGui::Render();
 
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
 	uint32_t image_index = Vk::Global::swapChain->AcquireImage(current_frame->GetImageAvailableSemaphore());
@@ -313,6 +443,8 @@ void NaturaForge::Update()
 	Vk::CommandBuffer* current_command_buffer = commandBuffers[image_index];
 
 	Render(current_command_buffer);
+	FillImGuiCommandBuffers();
+
 	Present();
 
 	static float exit_timer = 0.0f;
@@ -324,11 +456,36 @@ void NaturaForge::Update()
 		exit_timer = 0.0f;
 		// glfwSetWindowShouldClose(window->GetGLFWWindow(), 1);
 	}
+
+	// Update and Render additional Platform Windows		
+	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+	}
+}
+
+void NaturaForge::ShutdownImGui()
+{	
+	ImGui_ImplVulkan_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	for (auto& buffer : imGuiCommandBuffers)
+		delete buffer;
+
+	for (auto& pool : imGuiCommandPools)
+		delete pool;
+
+	// delete imGuiPipeline;
+	delete imGuiRenderPass;
 }
 
 void NaturaForge::Shutdown()
 {
 	Vk::Global::device->WaitIdle();
+
+	ShutdownImGui();
 	
 	tileMap.reset();
 
@@ -337,7 +494,9 @@ void NaturaForge::Shutdown()
 
 	delete offscreen.descriptorSet;
 	delete common.descriptorPool;
-	delete common.descriptorSetLayout;
+
+	delete offscreen.descriptorSetLayout;
+	delete composition.descriptorSetLayout;
 
 	delete offscreen.ubo.perScene.buffer;
 	

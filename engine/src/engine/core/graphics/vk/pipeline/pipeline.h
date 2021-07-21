@@ -37,8 +37,8 @@ namespace Engine
 			RenderPass *GetRenderPass();
 
 		private:
-			Shader *shader;
-			RenderPass *renderPass;
+			Shader* shader;
+			RenderPass* renderPass;
 
 			VkPipelineLayout vkPipelineLayout;
 			VkPipeline vkPipeline;

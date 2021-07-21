@@ -13,11 +13,13 @@ namespace Engine
 			~Frame();
 
 			VkSemaphore& GetImageAvailableSemaphore();
+			VkSemaphore& GetImGuiRenderFinishedSemaphore();
 			VkSemaphore& GetRenderFinishedSemaphore();
 			VkFence& GetInFlightFence();
 
 		private:
 			VkSemaphore imageAvailable;
+			VkSemaphore imGuiRenderFinished;
 			VkSemaphore renderFinished;
 			VkFence inFlightFence;
 

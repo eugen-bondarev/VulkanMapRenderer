@@ -7,6 +7,10 @@
 #include "renderer/atlas/texture_atlas.h"
 #include "renderer/atlas/tile_map.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_vulkan.h"
+
 using namespace Engine;
 
 struct UBOScene
@@ -39,7 +43,6 @@ private:
 	struct
 	{
 		Vk::DescriptorPool* descriptorPool;
-		Vk::DescriptorSetLayout* descriptorSetLayout;
 	} common;
 
 	void InitCommonResources();
@@ -50,6 +53,7 @@ private:
 		Vk::Texture2D* texture;
 		Vk::Framebuffer* framebuffer;
 
+		Vk::DescriptorSetLayout* descriptorSetLayout;
 		Vk::DescriptorSet* descriptorSet;
 
 		struct 
@@ -91,6 +95,16 @@ private:
 	void InitCompositionPipelineResources();
 
 	void FillCommandBuffers();
+
+	void InitImGui();
+	void ShutdownImGui();
+
+	// Vk::Pipeline* imGuiPipeline;
+	Vk::RenderPass* imGuiRenderPass;
+
+	std::vector<Vk::CommandPool*> imGuiCommandPools;
+	std::vector<Vk::CommandBuffer*> imGuiCommandBuffers;
+	void FillImGuiCommandBuffers();
 
 	std::shared_ptr<BlocksTileMap> tileMap;
 	
