@@ -8,13 +8,13 @@ namespace Engine
 	namespace Vk
 	{
 		Pipeline::Pipeline(
-			const std::string &vs_code,
-			const std::string &fs_code,
-			const glm::vec2 &viewport_size,
+			const std::string& vs_code,
+			const std::string& fs_code,
+			const glm::vec2& viewport_size,
 			const std::vector<VkAttachmentDescription>& attachments,
-			const BindingDescriptions &binding_descriptions,
-			const AttributeDescriptions &attribute_descriptions,
-			const SetLayouts &set_layouts
+			const BindingDescriptions& binding_descriptions,
+			const AttributeDescriptions& attribute_descriptions,
+			const SetLayouts& set_layouts
 		)
 		{
 			shader = new Shader(vs_code, fs_code);
@@ -101,7 +101,8 @@ namespace Engine
 
 			VkDynamicState dynamicStates[] = {
 				VK_DYNAMIC_STATE_VIEWPORT,
-				VK_DYNAMIC_STATE_LINE_WIDTH};
+				VK_DYNAMIC_STATE_LINE_WIDTH
+			};
 
 			VkPipelineDynamicStateCreateInfo dynamic_state{};
 			dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;

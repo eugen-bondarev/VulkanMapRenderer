@@ -38,19 +38,25 @@ private:
 
 	struct
 	{
-		struct 
-		{
-			Vk::Buffer* vertexBuffer;
-			Vk::Buffer* indexBuffer;
-		} canvas;
+		Vk::DescriptorPool* descriptorPool;
+		Vk::DescriptorSetLayout* descriptorSetLayout;
+	} common;
+
+	void InitCommonResources();
+
+	struct
+	{
+		Vk::Pipeline* pipeline;
+		Vk::Texture2D* texture;
+		Vk::Framebuffer* framebuffer;
+
+		Vk::DescriptorSet* descriptorSet;
 
 		struct 
 		{
 			Vk::Buffer* vertexBuffer;
 			Vk::Buffer* indexBuffer;
 		} block;
-		
-		Vk::Buffer* dynamicVertexBuffer;
 
 		struct
 		{
@@ -60,35 +66,29 @@ private:
 				UBOScene data;
 			} perScene;
 		} ubo;
+		
+		Vk::Buffer* dynamicVertexBuffer;
 
-
-	} scene;
-
-	struct
-	{
-		Vk::DescriptorPool* descriptorPool;
-		Vk::DescriptorSetLayout* descriptorSetLayout;
-	} common;
-
-	struct
-	{
-		Vk::Pipeline* pipeline;
-		Vk::Texture2D* texture;
-		Vk::Framebuffer* framebuffer;
-
-		Vk::DescriptorSet* descriptorSet;
 	} offscreen;
 
-	void InitOffscreenPipeline();
+	void InitOffscreenPipelineResources();
 
 	struct
 	{
 		Vk::Pipeline* pipeline;
 
+		Vk::DescriptorSetLayout* descriptorSetLayout;
 		Vk::DescriptorSet* descriptorSet;
+
+		struct 
+		{
+			Vk::Buffer* vertexBuffer;
+			Vk::Buffer* indexBuffer;
+		} canvas;
+
 	} composition;
 
-	void InitCompositionPipeline();
+	void InitCompositionPipelineResources();
 
 	void FillCommandBuffers();
 

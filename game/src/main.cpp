@@ -2,8 +2,25 @@
 
 #include "renderer/world/map/map_renderer.h"
 
+void NaturaForge::InitCommonResources()
+{
+	// Creating descriptor set layout (for the pipeline)
+	std::vector<VkDescriptorSetLayoutBinding> bindings = 
+	{
+		Vk::CreateBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
+		Vk::CreateBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+	};
 
-void NaturaForge::InitOffscreenPipeline()
+	common.descriptorSetLayout = new Vk::DescriptorSetLayout(bindings);
+
+	// Creating descriptor pool
+	common.descriptorPool = new Vk::DescriptorPool({
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 30 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 30 }
+	});
+}
+
+void NaturaForge::InitOffscreenPipelineResources()
 {
 	const Assets::Text vs_code("assets/shaders/default.vert.spv");
 	const Assets::Text fs_code("assets/shaders/default.frag.spv");
@@ -23,10 +40,10 @@ void NaturaForge::InitOffscreenPipeline()
 	offscreen.framebuffer = new Vk::Framebuffer(offscreen.texture->GetImageView()->GetVkImageView(), offscreen.pipeline->GetRenderPass()->GetVkRenderPass(), window->GetSize());
 
 	// Creating a uniform buffer (Scene scope)
-	scene.ubo.perScene.buffer = new Vk::Buffer(
+	offscreen.ubo.perScene.buffer = new Vk::Buffer(
 		sizeof(UBOScene),
 		1,
-		&scene.ubo.perScene.data,
+		&offscreen.ubo.perScene.data,
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
 	);
 
@@ -50,21 +67,18 @@ void NaturaForge::InitOffscreenPipeline()
 
 	std::vector<VkWriteDescriptorSet> offscreen_write_descriptor_sets = 
 	{
-		Vk::CreateWriteDescriptorSet(offscreen.descriptorSet, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &scene.ubo.perScene.buffer->GetDescriptor()),
+		Vk::CreateWriteDescriptorSet(offscreen.descriptorSet, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &offscreen.ubo.perScene.buffer->GetDescriptor()),
 		Vk::CreateWriteDescriptorSet(offscreen.descriptorSet, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &tileMap->GetImageView()->GetDescriptor())
 	};
 
 	offscreen.descriptorSet->Update(offscreen_write_descriptor_sets);
 	
 	// Dynamic buffer for blocks' positions
-	scene.dynamicVertexBuffer = new Vk::Buffer(sizeof(Vk::PerInstanceVertex), game->map->GetAmountOfBlocks(), nullptr, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+	offscreen.dynamicVertexBuffer = new Vk::Buffer(sizeof(Vk::PerInstanceVertex), game->map->GetAmountOfBlocks(), nullptr, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 }
 
-void NaturaForge::InitCompositionPipeline()
+void NaturaForge::InitCompositionPipelineResources()
 {
-	Vk::BindingDescriptions vertex_buffer_binding_descriptors = Util::Vector::Merge(Vk::Vertex::GetBindingDescriptions(), Vk::PerInstanceVertex::GetBindingDescriptions());
-	Vk::AttributeDescriptions vertex_buffer_attribute_descriptors = Util::Vector::Merge(Vk::Vertex::GetAttributeDescriptions(), Vk::PerInstanceVertex::GetAttributeDescriptions());
-
 	{			
 		const std::vector<Vk::Vertex> vertices = 
 		{
@@ -75,7 +89,7 @@ void NaturaForge::InitCompositionPipeline()
 		};
 
 		Vk::Buffer staging_buffer(vertices);
-		scene.block.vertexBuffer = new Vk::Buffer(&staging_buffer);
+		offscreen.block.vertexBuffer = new Vk::Buffer(&staging_buffer);
 	}
 	{
 		const std::vector<uint16_t> indices = 
@@ -84,8 +98,19 @@ void NaturaForge::InitCompositionPipeline()
 		};
 
 		Vk::Buffer staging_buffer(indices);
-		scene.block.indexBuffer = new Vk::Buffer(&staging_buffer, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+		offscreen.block.indexBuffer = new Vk::Buffer(&staging_buffer, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 	}
+	
+	// Creating descriptor set layout (for the pipeline)
+	std::vector<VkDescriptorSetLayoutBinding> bindings = 
+	{
+		Vk::CreateBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+	};
+
+	composition.descriptorSetLayout = new Vk::DescriptorSetLayout(bindings);
+
+	Vk::BindingDescriptions vertex_buffer_binding_descriptors = Vk::Vertex::GetBindingDescriptions();
+	Vk::AttributeDescriptions vertex_buffer_attribute_descriptors = Vk::Vertex::GetAttributeDescriptions();
 
 	// Creating pipeline
 	const Assets::Text vs_code("assets/shaders/composition.vert.spv");
@@ -96,7 +121,7 @@ void NaturaForge::InitCompositionPipeline()
 		ExtentToVec2(Vk::Global::swapChain->GetExtent()),
 		{ Vk::Util::CreateAttachment(Vk::Global::swapChain->GetImageFormat()) },
 		vertex_buffer_binding_descriptors, vertex_buffer_attribute_descriptors,
-		{ common.descriptorSetLayout->GetVkDescriptorSetLayout() }
+		{ composition.descriptorSetLayout->GetVkDescriptorSetLayout() }
 	);
 
 	// Swap chain's framebuffers will use its output
@@ -113,7 +138,7 @@ void NaturaForge::InitCompositionPipeline()
 		};
 
 		Vk::Buffer staging_buffer(vertices);
-		scene.canvas.vertexBuffer = new Vk::Buffer(&staging_buffer);
+		composition.canvas.vertexBuffer = new Vk::Buffer(&staging_buffer);
 	}
 	{
 		const std::vector<uint16_t> indices = 
@@ -122,15 +147,14 @@ void NaturaForge::InitCompositionPipeline()
 		};
 
 		Vk::Buffer staging_buffer(indices);
-		scene.canvas.indexBuffer = new Vk::Buffer(&staging_buffer, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+		composition.canvas.indexBuffer = new Vk::Buffer(&staging_buffer, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 	}
 
 	composition.descriptorSet = new Vk::DescriptorSet(common.descriptorPool, { common.descriptorSetLayout->GetVkDescriptorSetLayout() });
 
 	std::vector<VkWriteDescriptorSet> composition_write_descriptor_sets = 
 	{
-		Vk::CreateWriteDescriptorSet(composition.descriptorSet, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &scene.ubo.perScene.buffer->GetDescriptor()),
-		Vk::CreateWriteDescriptorSet(composition.descriptorSet, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER , &offscreen.texture->GetImageView()->GetDescriptor())
+		Vk::CreateWriteDescriptorSet(composition.descriptorSet, 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER , &offscreen.texture->GetImageView()->GetDescriptor())
 	};
 
 	composition.descriptorSet->Update(composition_write_descriptor_sets);
@@ -154,18 +178,18 @@ void NaturaForge::FillCommandBuffers()
 		cmd->Begin();
 			cmd->BeginRenderPass(offscreen.pipeline->GetRenderPass(), offscreen.framebuffer);
 				cmd->BindPipeline(offscreen.pipeline);
-					cmd->BindVertexBuffers({ scene.block.vertexBuffer, scene.dynamicVertexBuffer }, { 0, 0 });
-					cmd->BindIndexBuffer(scene.block.indexBuffer);
+					cmd->BindVertexBuffers({ offscreen.block.vertexBuffer, offscreen.dynamicVertexBuffer }, { 0, 0 });
+					cmd->BindIndexBuffer(offscreen.block.indexBuffer);
 						cmd->BindDescriptorSets(offscreen.pipeline, 1, &offscreen.descriptorSet->GetVkDescriptorSet());
-						cmd->DrawIndexed(scene.block.indexBuffer->GetAmountOfElements(), game->map->GetAmountOfBlocks(), 0, 0, 0);
+						cmd->DrawIndexed(offscreen.block.indexBuffer->GetAmountOfElements(), game->map->GetAmountOfBlocks(), 0, 0, 0);
 			cmd->EndRenderPass();
 
 			cmd->BeginRenderPass(composition.pipeline->GetRenderPass(), framebuffer);
 				cmd->BindPipeline(composition.pipeline);
-					cmd->BindVertexBuffers({ scene.canvas.vertexBuffer, scene.dynamicVertexBuffer }, { 0, 0 });
-					cmd->BindIndexBuffer(scene.canvas.indexBuffer);
+					cmd->BindVertexBuffers({ composition.canvas.vertexBuffer, offscreen.dynamicVertexBuffer }, { 0, 0 });
+					cmd->BindIndexBuffer(composition.canvas.indexBuffer);
 						cmd->BindDescriptorSets(composition.pipeline, 1, &composition.descriptorSet->GetVkDescriptorSet());
-						cmd->DrawIndexed(scene.canvas.indexBuffer->GetAmountOfElements(), 1, 0, 0, 0);
+						cmd->DrawIndexed(composition.canvas.indexBuffer->GetAmountOfElements(), 1, 0, 0, 0);
 			cmd->EndRenderPass();
 		cmd->End();
 	}
@@ -183,23 +207,9 @@ void NaturaForge::Init()
 	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
 		commandBuffers.push_back(new Vk::CommandBuffer(Vk::Global::commandPool));
 
-	// Creating descriptor set layout (for the pipeline)
-	std::vector<VkDescriptorSetLayoutBinding> bindings = 
-	{
-		Vk::CreateBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),
-		Vk::CreateBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-	};
-
-	common.descriptorSetLayout = new Vk::DescriptorSetLayout(bindings);
-
-	// Creating descriptor pool
-	common.descriptorPool = new Vk::DescriptorPool({
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 30 },
-		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 30 }
-	});
-
-	InitOffscreenPipeline();
-	InitCompositionPipeline();
+	InitCommonResources();
+	InitOffscreenPipelineResources();
+	InitCompositionPipelineResources();
 	FillCommandBuffers();
 }
 
@@ -217,7 +227,7 @@ void NaturaForge::UpdateMap()
 				MapRenderer::GetRenderData(game->map.get(), game->camera.GetPosition(), render_data);
 
 				MW_PROFILER_NAMED_SCOPE("Update buffer");
-				scene.dynamicVertexBuffer->Update(render_data.data(), static_cast<uint32_t>(sizeof(glm::vec4) * game->map->GetAmountOfBlocks()));
+				offscreen.dynamicVertexBuffer->Update(render_data.data(), static_cast<uint32_t>(sizeof(glm::vec4) * game->map->GetAmountOfBlocks()));
 			}
 		}
 	}
@@ -252,7 +262,7 @@ void NaturaForge::UpdateProjectionViewMatrix()
 		glm::mat4x4 projection_matrix = glm::ortho(-half_size.x, half_size.x, -half_size.y, half_size.y);
 		glm::mat4x4 view_matrix = glm::inverse(glm::translate(glm::mat4x4(1), glm::vec3(game->camera.GetPosition(), 0.0f)));
 		glm::mat4x4 projection_view_matrix = projection_matrix * view_matrix;
-		scene.ubo.perScene.buffer->Update(&projection_view_matrix);
+		offscreen.ubo.perScene.buffer->Update(&projection_view_matrix);
 	}
 }
 
@@ -329,18 +339,18 @@ void NaturaForge::Shutdown()
 	delete common.descriptorPool;
 	delete common.descriptorSetLayout;
 
-	delete scene.ubo.perScene.buffer;
+	delete offscreen.ubo.perScene.buffer;
 	
-	delete scene.canvas.vertexBuffer;
-	delete scene.canvas.indexBuffer;
+	delete composition.canvas.vertexBuffer;
+	delete composition.canvas.indexBuffer;
 	
-	delete scene.block.vertexBuffer;
-	delete scene.block.indexBuffer;
+	delete offscreen.block.vertexBuffer;
+	delete offscreen.block.indexBuffer;
 
 	delete composition.pipeline;
 	delete offscreen.pipeline;
 
-	delete scene.dynamicVertexBuffer;
+	delete offscreen.dynamicVertexBuffer;
 
 	for (int i = 0; i < commandBuffers.size(); i++)
 		delete commandBuffers[i];
