@@ -186,8 +186,6 @@ void NaturaForge::RenderUI()
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 	ImGui::End();
 
-	ImGui::ShowDemoWindow();
-
 	ImGui::Render();
 }
 
