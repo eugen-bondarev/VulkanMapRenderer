@@ -7,9 +7,29 @@
 #include "color_pass.h"
 #include "composition.h"
 
-namespace MapRenderer
+class MapRenderer
 {
-	extern Composition* composition;
+public:
+	MapRenderer(Engine::Vk::DescriptorPool* descriptor_pool, const std::shared_ptr<Game>& game);
+	~MapRenderer();
 
+	void Update();
+	void UpdateSpace();
+
+	void FillCommandBuffers();
 	void GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& data);
-}
+
+	std::vector<Engine::Vk::CommandBuffer*>& GetCommandBuffers();
+
+private:
+	const std::shared_ptr<Game>& game;
+
+	std::vector<Engine::Vk::CommandBuffer*> commandBuffers;
+	Offscreen::ColorPass* colorPass;
+	Composition* composition;
+
+	MapRenderer(const MapRenderer&) = delete;
+	MapRenderer& operator=(const MapRenderer&) = delete;
+};
+
+extern MapRenderer* mapRenderer;

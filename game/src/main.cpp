@@ -22,28 +22,6 @@ void NaturaForge::InitCommonResources()
 	});
 }
 
-void NaturaForge::FillCommandBuffers()
-{	
-	/*
-	* It's definitely efficient to write to the command buffer once.
-	* 
-	* But I don't know if it's going to be possible in the conditions of the game.
-	*
-	* Note: Alternatively I can create command buffers (three) especially for this task (to render the map),
-	* which I most likely will end up doing
-	*/
-	for (int i = 0; i < commandBuffers.size(); i++)
-	{
-		Vk::CommandBuffer* cmd = commandBuffers[i];
-		Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetFramebuffers()[i];
-
-		cmd->Begin();
-			MapRenderer::Offscreen::colorPass->WriteToCmd(cmd);
-			MapRenderer::composition->WriteToCmd(cmd, framebuffer);
-		cmd->End();
-	}
-}
-
 void NaturaForge::InitImGui()
 {
 	imgui.renderPass = new Vk::RenderPass(
@@ -110,20 +88,14 @@ void NaturaForge::Init()
 
 	imagesInFlight.resize(Vk::Global::swapChain->GetImageViews().size());
 
-	// Create command buffers for each swap chain image.
-	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
-		commandBuffers.push_back(new Vk::CommandBuffer(Vk::Global::commandPool));
-
 	InitCommonResources();
 
-	MapRenderer::Offscreen::colorPass = new MapRenderer::Offscreen::ColorPass(game, common.descriptorPool);
-	MapRenderer::composition = new MapRenderer::Composition(common.descriptorPool);
-	
-	FillCommandBuffers();
+	mapRenderer = new MapRenderer(common.descriptorPool, game);	
+	mapRenderer->FillCommandBuffers();
 
 	InitImGui();
 
-	// userTextureID = ImGui_ImplVulkan_AddTexture(MapRenderer::Offscreen::offscreen->block.tileMap->GetImageView()->GetDescriptor().sampler, MapRenderer::Offscreen::offscreen->block.tileMap->GetImageView()->GetDescriptor().imageView, MapRenderer::Offscreen::offscreen->block.tileMap->GetImageView()->GetDescriptor().imageLayout);
+	// userTextureID = ImGui_ImplVulkan_AddTexture(Offscreen::offscreen->block.tileMap->GetImageView()->GetDescriptor().sampler, Offscreen::offscreen->block.tileMap->GetImageView()->GetDescriptor().imageView, Offscreen::offscreen->block.tileMap->GetImageView()->GetDescriptor().imageLayout);
 }
 
 void NaturaForge::UpdateMap()
@@ -135,10 +107,11 @@ void NaturaForge::UpdateMap()
 		{
 			game->map->PopulateBlocks(game->camera.GetPosition());
 
-			std::vector<glm::vec4> render_data;
-			MapRenderer::GetRenderData(game->map.get(), game->camera.GetPosition(), render_data);
-			
-			MapRenderer::Offscreen::colorPass->UpdateBlocks(render_data);
+			mapRenderer->Update();
+
+			// std::vector<glm::vec4> render_data;			
+			// mapRenderer->GetRenderData(game->map.get(), game->camera.GetPosition(), render_data);			
+			// mapRenderer->colorPass->UpdateBlocks(render_data);
 		}
 	}
 }
@@ -168,7 +141,7 @@ void NaturaForge::UpdateProjectionViewMatrix()
 
 	if (game->camera.GetEvents() & CameraEvents_PositionChanged)
 	{
-		MapRenderer::Offscreen::colorPass->UpdateSpace();
+		mapRenderer->UpdateSpace();
 	}
 }
 
@@ -198,7 +171,7 @@ void NaturaForge::FillImGuiCommandBuffers()
 
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
 	
-	auto a = std::async(std::launch::async, [&]()
+	std::future<void> a = std::async(std::launch::async, [&]()
 	{
 		pool->Reset();
 		cmd->Begin();
@@ -263,7 +236,7 @@ void NaturaForge::Update()
 	RenderUI();
 
 	// Renderer
-	Vk::CommandBuffer* current_command_buffer = commandBuffers[image_index];
+	Vk::CommandBuffer* current_command_buffer = mapRenderer->GetCommandBuffers()[image_index];
 	Render(current_command_buffer);
 
 	FillImGuiCommandBuffers();
@@ -301,11 +274,7 @@ void NaturaForge::Shutdown()
 
 	delete common.descriptorPool;
 
-	delete MapRenderer::Offscreen::colorPass;
-	delete MapRenderer::composition;
-
-	for (int i = 0; i < commandBuffers.size(); i++)
-		delete commandBuffers[i];
+	delete mapRenderer;
 
 	delete frameManager;
 }

@@ -32,7 +32,6 @@ private:
 	void Present();
 
 	Vk::FrameManager* frameManager;
-	std::vector<Vk::CommandBuffer*> commandBuffers;
 	std::vector<VkFence> imagesInFlight;
 
 	struct
@@ -41,8 +40,6 @@ private:
 	} common;
 
 	void InitCommonResources();
-
-	void FillCommandBuffers();
 
 	void InitImGui();
 	void ShutdownImGui();
