@@ -153,7 +153,7 @@ void Map::PopulateBlocks(glm::vec2 view_position)
 	);
 }
 
-int Map::GetAmountOfBlocks()
+int Map::GetAmountOfBlocks() const
 {
 	return blocks.size() * blocks[0].size();
 }

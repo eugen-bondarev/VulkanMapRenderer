@@ -40,7 +40,7 @@ public:
 
 	void CalculateVisibleBlocks(glm::vec2 view_position);
 
-	int GetAmountOfBlocks();
+	int GetAmountOfBlocks() const;
 	
 private:
 	Blocks_t blocks;

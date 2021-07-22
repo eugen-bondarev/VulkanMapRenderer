@@ -13,21 +13,15 @@
 
 using namespace Engine;
 
-struct UBOScene
-{
-	glm::mat4x4 projection;
-};
-
 class NaturaForge : public App
 {
 public:
-
 	void Init() override;
 	void Update() override;
 	void Shutdown() override;
 
 private:
-	std::unique_ptr<Game> game;
+	std::shared_ptr<Game> game;
 
 	void UpdateMap();
 	void UpdateProjectionViewMatrix();
@@ -48,34 +42,34 @@ private:
 
 	void InitCommonResources();
 
-	struct
-	{
-		Vk::Pipeline* pipeline;
-		Vk::Texture2D* texture;
-		Vk::Framebuffer* framebuffer;
+	// struct
+	// {
+	// 	Vk::Pipeline* pipeline;
+	// 	Vk::Texture2D* texture;
+	// 	Vk::Framebuffer* framebuffer;
 
-		Vk::DescriptorSetLayout* descriptorSetLayout;
-		Vk::DescriptorSet* descriptorSet;
+	// 	Vk::DescriptorSetLayout* descriptorSetLayout;
+	// 	Vk::DescriptorSet* descriptorSet;
 
-		struct 
-		{
-			Vk::Buffer* vertexBuffer;
-			Vk::Buffer* indexBuffer;
-			std::shared_ptr<BlocksTileMap> tileMap;
-		} block;
+	// 	struct 
+	// 	{
+	// 		Vk::Buffer* vertexBuffer;
+	// 		Vk::Buffer* indexBuffer;
+	// 		std::shared_ptr<BlocksTileMap> tileMap;
+	// 	} block;
 
-		struct
-		{
-			struct 
-			{
-				Vk::Buffer* buffer;
-				UBOScene data;
-			} perScene;
-		} ubo;
+	// 	struct
+	// 	{
+	// 		struct 
+	// 		{
+	// 			Vk::Buffer* buffer;
+	// 			UBOScene data;
+	// 		} perScene;
+	// 	} ubo;
 		
-		Vk::Buffer* dynamicVertexBuffer;
+	// 	Vk::Buffer* dynamicVertexBuffer;
 
-	} offscreen;
+	// } offscreen;
 
 	void InitOffscreenPipelineResources();
 

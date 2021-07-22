@@ -34,7 +34,7 @@ namespace Engine
 			}
 		}
 
-		RenderPass::RenderPass(const std::vector<VkAttachmentDescription>& attachments)
+		RenderPass::RenderPass(const AttachmentDescriptions& attachments)
 		{
 			VkAttachmentReference color_attachment_ref{};
 			color_attachment_ref.attachment = 0;

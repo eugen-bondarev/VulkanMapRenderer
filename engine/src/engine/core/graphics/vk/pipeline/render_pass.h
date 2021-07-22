@@ -22,10 +22,12 @@ namespace Engine
 			);
 		}
 
+		using AttachmentDescriptions = std::vector<VkAttachmentDescription>;
+
 		class RenderPass
 		{
 		public:
-			RenderPass(const std::vector<VkAttachmentDescription>& attachments);
+			RenderPass(const AttachmentDescriptions& attachments);
 			~RenderPass();
 
 			VkRenderPass& GetVkRenderPass();

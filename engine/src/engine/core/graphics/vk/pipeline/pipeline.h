@@ -22,7 +22,7 @@ namespace Engine
 				const std::string &vs_code,
 				const std::string &fs_code,
 				const glm::vec2 &viewport_size,
-				const std::vector<VkAttachmentDescription>& attachments,
+				const AttachmentDescriptions& attachments,
 				const BindingDescriptions &binding_descriptions = {},
 				const AttributeDescriptions &attribute_descriptions = {},
 				const SetLayouts &set_layouts = {}

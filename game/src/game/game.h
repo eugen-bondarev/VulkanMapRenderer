@@ -1,7 +1,6 @@
 #pragma once
 
 #include "world/map/map.h"
-#include "renderer/world/map/map_renderer.h"
 #include "ecs/camera.h"
 
 class Game
