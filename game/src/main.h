@@ -42,54 +42,6 @@ private:
 
 	void InitCommonResources();
 
-	// struct
-	// {
-	// 	Vk::Pipeline* pipeline;
-	// 	Vk::Texture2D* texture;
-	// 	Vk::Framebuffer* framebuffer;
-
-	// 	Vk::DescriptorSetLayout* descriptorSetLayout;
-	// 	Vk::DescriptorSet* descriptorSet;
-
-	// 	struct 
-	// 	{
-	// 		Vk::Buffer* vertexBuffer;
-	// 		Vk::Buffer* indexBuffer;
-	// 		std::shared_ptr<BlocksTileMap> tileMap;
-	// 	} block;
-
-	// 	struct
-	// 	{
-	// 		struct 
-	// 		{
-	// 			Vk::Buffer* buffer;
-	// 			UBOScene data;
-	// 		} perScene;
-	// 	} ubo;
-		
-	// 	Vk::Buffer* dynamicVertexBuffer;
-
-	// } offscreen;
-
-	void InitOffscreenPipelineResources();
-
-	struct
-	{
-		Vk::Pipeline* pipeline;
-
-		Vk::DescriptorSetLayout* descriptorSetLayout;
-		Vk::DescriptorSet* descriptorSet;
-
-		struct 
-		{
-			Vk::Buffer* vertexBuffer;
-			Vk::Buffer* indexBuffer;
-		} canvas;
-
-	} composition;
-
-	void InitCompositionPipelineResources();
-
 	void FillCommandBuffers();
 
 	void InitImGui();

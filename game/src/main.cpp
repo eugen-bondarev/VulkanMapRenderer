@@ -22,79 +22,6 @@ void NaturaForge::InitCommonResources()
 	});
 }
 
-void NaturaForge::InitOffscreenPipelineResources()
-{
-	MapRenderer::offscreen = new MapRenderer::Offscreen(game, common.descriptorPool);
-}
-
-void NaturaForge::InitCompositionPipelineResources()
-{	
-	// Creating descriptor set layout (for the pipeline)
-	std::vector<VkDescriptorSetLayoutBinding> bindings = 
-	{
-		Vk::CreateBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-	};
-
-	composition.descriptorSetLayout = new Vk::DescriptorSetLayout(bindings);
-
-	Vk::BindingDescriptions vertex_buffer_binding_descriptors = Vk::Vertex::GetBindingDescriptions();
-	Vk::AttributeDescriptions vertex_buffer_attribute_descriptors = Vk::Vertex::GetAttributeDescriptions();
-
-	// Creating pipeline
-	const Assets::Text vs_code("assets/shaders/composition.vert.spv");
-	const Assets::Text fs_code("assets/shaders/composition.frag.spv");
-
-	composition.pipeline = new Vk::Pipeline(
-		vs_code.GetContent(), fs_code.GetContent(), 
-		Util::Math::ExtentToVec2(Vk::Global::swapChain->GetExtent()),
-		{ Vk::Util::CreateAttachment(
-			Vk::Global::swapChain->GetImageFormat(), 
-			VK_IMAGE_LAYOUT_UNDEFINED, 
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-			/**
-			 * NOTE: Get rid of this if I don't render ImGui above.
-			 */
-		) },
-		vertex_buffer_binding_descriptors, vertex_buffer_attribute_descriptors,
-		{ composition.descriptorSetLayout->GetVkDescriptorSetLayout() }
-	);
-
-	// Swap chain's framebuffers will use its output
-	composition.pipeline->SetAsOutput();
-
-	// Loading the block's vertex & index buffers. I created a scope in order for it to free the staging buffer automatically.
-	{			
-		const std::vector<Vk::Vertex> vertices = 
-		{
-			{{-1.0f, -1.0f}, { 0.0f, 0.0f }},
-			{{ 1.0f, -1.0f}, { 1.0f, 0.0f }},
-			{{ 1.0f,  1.0f}, { 1.0f, 1.0f }},
-			{{-1.0f,  1.0f}, { 0.0f, 1.0f }}
-		};
-
-		Vk::Buffer staging_buffer(vertices);
-		composition.canvas.vertexBuffer = new Vk::Buffer(&staging_buffer);
-	}
-	{
-		const std::vector<uint16_t> indices = 
-		{
-			0, 1, 2, 2, 3, 0
-		};
-
-		Vk::Buffer staging_buffer(indices);
-		composition.canvas.indexBuffer = new Vk::Buffer(&staging_buffer, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-	}
-
-	composition.descriptorSet = new Vk::DescriptorSet(common.descriptorPool, { composition.descriptorSetLayout->GetVkDescriptorSetLayout() });
-
-	std::vector<VkWriteDescriptorSet> composition_write_descriptor_sets = 
-	{
-		Vk::CreateWriteDescriptorSet(composition.descriptorSet, 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER , &MapRenderer::offscreen->GetOutputDescriptorImageInfo())
-	};
-
-	composition.descriptorSet->Update(composition_write_descriptor_sets);
-}
-
 void NaturaForge::FillCommandBuffers()
 {	
 	/*
@@ -111,15 +38,8 @@ void NaturaForge::FillCommandBuffers()
 		Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetFramebuffers()[i];
 
 		cmd->Begin();
-			MapRenderer::offscreen->WriteToCmd(cmd);
-
-			cmd->BeginRenderPass(composition.pipeline->GetRenderPass(), framebuffer);
-				cmd->BindPipeline(composition.pipeline);
-					cmd->BindVertexBuffers({ composition.canvas.vertexBuffer }, { 0 });
-					cmd->BindIndexBuffer(composition.canvas.indexBuffer);
-						cmd->BindDescriptorSets(composition.pipeline, 1, &composition.descriptorSet->GetVkDescriptorSet());
-						cmd->DrawIndexed(composition.canvas.indexBuffer->GetAmountOfElements(), 1, 0, 0, 0);
-			cmd->EndRenderPass();
+			MapRenderer::Offscreen::colorPass->WriteToCmd(cmd);
+			MapRenderer::composition->WriteToCmd(cmd, framebuffer);
 		cmd->End();
 	}
 }
@@ -196,14 +116,14 @@ void NaturaForge::Init()
 
 	InitCommonResources();
 
-	InitOffscreenPipelineResources();
-	InitCompositionPipelineResources();
+	MapRenderer::Offscreen::colorPass = new MapRenderer::Offscreen::ColorPass(game, common.descriptorPool);
+	MapRenderer::composition = new MapRenderer::Composition(common.descriptorPool);
 	
 	FillCommandBuffers();
 
 	InitImGui();
 
-	// userTextureID = ImGui_ImplVulkan_AddTexture(MapRenderer::offscreen->block.tileMap->GetImageView()->GetDescriptor().sampler, MapRenderer::offscreen->block.tileMap->GetImageView()->GetDescriptor().imageView, MapRenderer::offscreen->block.tileMap->GetImageView()->GetDescriptor().imageLayout);
+	// userTextureID = ImGui_ImplVulkan_AddTexture(MapRenderer::Offscreen::offscreen->block.tileMap->GetImageView()->GetDescriptor().sampler, MapRenderer::Offscreen::offscreen->block.tileMap->GetImageView()->GetDescriptor().imageView, MapRenderer::Offscreen::offscreen->block.tileMap->GetImageView()->GetDescriptor().imageLayout);
 }
 
 void NaturaForge::UpdateMap()
@@ -215,16 +135,10 @@ void NaturaForge::UpdateMap()
 		{
 			game->map->PopulateBlocks(game->camera.GetPosition());
 
-			MapRenderer::offscreen->UpdateBlocks();
-
-			// {
-			// 	std::vector<glm::vec4> render_data;
-			// 	MapRenderer::GetRenderData(game->map.get(), game->camera.GetPosition(), render_data);
-
-			// 	VT_PROFILER_NAMED_SCOPE("Update buffer");
-
-			// 	MapRenderer::offscreen->dynamicVertexBuffer->Update(render_data.data(), static_cast<uint32_t>(sizeof(glm::vec4) * game->map->GetAmountOfBlocks()));
-			// }
+			std::vector<glm::vec4> render_data;
+			MapRenderer::GetRenderData(game->map.get(), game->camera.GetPosition(), render_data);
+			
+			MapRenderer::Offscreen::colorPass->UpdateBlocks(render_data);
 		}
 	}
 }
@@ -254,7 +168,7 @@ void NaturaForge::UpdateProjectionViewMatrix()
 
 	if (game->camera.GetEvents() & CameraEvents_PositionChanged)
 	{
-		MapRenderer::offscreen->UpdateSpace();
+		MapRenderer::Offscreen::colorPass->UpdateSpace();
 	}
 }
 
@@ -387,12 +301,8 @@ void NaturaForge::Shutdown()
 
 	delete common.descriptorPool;
 
-	delete composition.descriptorSetLayout;	
-	delete composition.canvas.vertexBuffer;
-	delete composition.canvas.indexBuffer;
-	delete composition.pipeline;
-
-	delete MapRenderer::offscreen;
+	delete MapRenderer::Offscreen::colorPass;
+	delete MapRenderer::composition;
 
 	for (int i = 0; i < commandBuffers.size(); i++)
 		delete commandBuffers[i];
