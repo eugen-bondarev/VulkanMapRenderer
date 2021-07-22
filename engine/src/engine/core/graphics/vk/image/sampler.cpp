@@ -34,14 +34,14 @@ namespace Engine
 			create_info.minLod = 0.0f;
 			create_info.maxLod = 0.0f;
 
-			VK_CHECK(vkCreateSampler(Global::device->GetVkDevice(), &create_info, nullptr, &vkSampler), "Failed to create texture sampler.");
-			TRACE();
+			VT_CHECK(vkCreateSampler(Global::device->GetVkDevice(), &create_info, nullptr, &vkSampler));
+			VT_TRACE();
 		}
 
 		Sampler::~Sampler()
 		{
     		vkDestroySampler(Global::device->GetVkDevice(), vkSampler, nullptr);
-			TRACE();
+			VT_TRACE();
 		}
 
 		VkSampler& Sampler::GetVkSampler()

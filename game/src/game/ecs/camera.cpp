@@ -9,7 +9,7 @@ void Camera::CalculateTransformMatrix()
 
 void Camera::CheckPositionChange()
 {
-	MW_PROFILER_SCOPE();
+	VT_PROFILER_SCOPE();
 
 	events = CameraEvents_None;
 

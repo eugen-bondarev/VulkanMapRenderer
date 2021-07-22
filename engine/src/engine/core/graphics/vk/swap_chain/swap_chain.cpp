@@ -63,7 +63,7 @@ namespace Engine
 				create_info.clipped = VK_TRUE;
 				create_info.oldSwapchain = VK_NULL_HANDLE;
 
-				VK_CHECK(vkCreateSwapchainKHR(device->GetVkDevice(), &create_info, nullptr, &vkSwapChain), "Failed to create swap chain.");
+				VT_CHECK(vkCreateSwapchainKHR(device->GetVkDevice(), &create_info, nullptr, &vkSwapChain));
 
 				vkGetSwapchainImagesKHR(device->GetVkDevice(), vkSwapChain, &image_count, nullptr);
 				images.resize(image_count);
@@ -73,7 +73,7 @@ namespace Engine
 
 				CreateImageViews();
 
-				TRACE();
+				VT_TRACE();
 			}
 
 			SwapChain::~SwapChain()
@@ -85,7 +85,7 @@ namespace Engine
 				for (auto& framebuffer : framebuffers)
 					delete framebuffer;
 
-				TRACE();
+				VT_TRACE();
 			}
 
 			Vk::Framebuffer* SwapChain::GetCurrentScreenFramebuffer()
@@ -248,7 +248,7 @@ namespace Engine
 					createInfo.subresourceRange.baseArrayLayer = 0;
 					createInfo.subresourceRange.layerCount = 1;
 
-					VK_CHECK(vkCreateImageView(device->GetVkDevice(), &createInfo, nullptr, &imageViews[i]), "Failed to create image views.");
+					VT_CHECK(vkCreateImageView(device->GetVkDevice(), &createInfo, nullptr, &imageViews[i]));
 				}
 			}
 

@@ -13,16 +13,16 @@ namespace Engine
 
 			Surface::Surface()
 			{
-				VK_CHECK(glfwCreateWindowSurface(instance->GetVkInstance(), window->GetGLFWWindow(), nullptr, &vkSurface), "Failed to create window surface.");
+				VT_CHECK(glfwCreateWindowSurface(instance->GetVkInstance(), window->GetGLFWWindow(), nullptr, &vkSurface));
 
-				TRACE();
+				VT_TRACE();
 			}
 
 			Surface::~Surface()
 			{
 				vkDestroySurfaceKHR(instance->GetVkInstance(), vkSurface, nullptr);
 
-				TRACE();
+				VT_TRACE();
 			}
 
 			VkSurfaceKHR Surface::GetVkSurface() const

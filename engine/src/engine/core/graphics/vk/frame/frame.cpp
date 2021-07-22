@@ -15,10 +15,10 @@ namespace Engine
 			fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 			fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-			VK_CHECK(vkCreateSemaphore(Vk::Global::device->GetVkDevice(), &semaphore_info, nullptr, &imageAvailable), "Failed to create semaphore 1");
-			VK_CHECK(vkCreateSemaphore(Vk::Global::device->GetVkDevice(), &semaphore_info, nullptr, &renderFinished), "Failed to create semaphore 2");
-			VK_CHECK(vkCreateSemaphore(Vk::Global::device->GetVkDevice(), &semaphore_info, nullptr, &imGuiRenderFinished), "Failed to create semaphore 2");
-			VK_CHECK(vkCreateFence(Vk::Global::device->GetVkDevice(), &fence_info, nullptr, &inFlightFence), "Failed to create fence 1");
+			VT_CHECK(vkCreateSemaphore(Vk::Global::device->GetVkDevice(), &semaphore_info, nullptr, &imageAvailable));
+			VT_CHECK(vkCreateSemaphore(Vk::Global::device->GetVkDevice(), &semaphore_info, nullptr, &renderFinished));
+			VT_CHECK(vkCreateSemaphore(Vk::Global::device->GetVkDevice(), &semaphore_info, nullptr, &imGuiRenderFinished));
+			VT_CHECK(vkCreateFence(Vk::Global::device->GetVkDevice(), &fence_info, nullptr, &inFlightFence));
 		}
 
 		Frame::~Frame()

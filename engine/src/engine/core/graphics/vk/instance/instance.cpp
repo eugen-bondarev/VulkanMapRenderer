@@ -14,7 +14,7 @@ namespace Engine
 			{
 				if (Validation::enableValidationLayers && !Validation::CheckValidationSupport())
 				{
-					THROW("Validation layers required but not supported.");
+					VT_THROW("Validation layers required but not supported.");
 				}
 
 				VkApplicationInfo appInfo{};
@@ -47,22 +47,22 @@ namespace Engine
 					createInfo.enabledLayerCount = 0;
 				}
 
-				VK_CHECK(vkCreateInstance(&createInfo, nullptr, &vkInstance), "Failed to create instance.");
+				VT_CHECK(vkCreateInstance(&createInfo, nullptr, &vkInstance));
 
 				uint32_t extensionCount = 0;
 				vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 				std::vector<VkExtensionProperties> extensions(extensionCount);
 				vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
-				LOG_OUT("Available extensions:");
+				VT_LOG_OUT("Available extensions:");
 				for (const auto &ext : extensions)
 				{
-					LOG_OUT(ext.extensionName);
+					VT_LOG_OUT(ext.extensionName);
 				}
 
 				Validation::SetupDebugMessenger(vkInstance);
 
-				TRACE();
+				VT_TRACE();
 			}
 
 			Instance::~Instance()
@@ -71,7 +71,7 @@ namespace Engine
 
 				vkDestroyInstance(vkInstance, nullptr);
 
-				TRACE();
+				VT_TRACE();
 			}
 
 			VkInstance Instance::GetVkInstance() const

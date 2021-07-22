@@ -116,7 +116,7 @@ namespace Engine
 			pipeline_layout_info.pushConstantRangeCount = 0;								 // Optional
 			pipeline_layout_info.pPushConstantRanges = nullptr;								 // Optional
 
-			VK_CHECK(vkCreatePipelineLayout(Global::device->GetVkDevice(), &pipeline_layout_info, nullptr, &vkPipelineLayout), "Failed to create pipeline layout.");
+			VT_CHECK(vkCreatePipelineLayout(Global::device->GetVkDevice(), &pipeline_layout_info, nullptr, &vkPipelineLayout));
 
 			renderPass = new RenderPass(attachments);
 
@@ -138,9 +138,9 @@ namespace Engine
 			pipeline_info.basePipelineHandle = VK_NULL_HANDLE; // Optional
 			pipeline_info.basePipelineIndex = -1;			   // Optional
 
-			VK_CHECK(vkCreateGraphicsPipelines(Global::device->GetVkDevice(), VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &vkPipeline), "Failed to create graphics pipeline.");
+			VT_CHECK(vkCreateGraphicsPipelines(Global::device->GetVkDevice(), VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &vkPipeline));
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		Pipeline::~Pipeline()
@@ -150,7 +150,7 @@ namespace Engine
 			vkDestroyPipelineLayout(Global::device->GetVkDevice(), vkPipelineLayout, nullptr);
 			delete shader;
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		void Pipeline::SetAsOutput()

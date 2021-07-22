@@ -27,8 +27,6 @@ public:
 	void Shutdown() override;
 
 private:
-	std::vector<glm::vec4> renderData;
-
 	std::unique_ptr<Game> game;
 
 	void UpdateMap();

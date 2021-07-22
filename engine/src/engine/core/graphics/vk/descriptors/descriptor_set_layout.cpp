@@ -25,7 +25,7 @@ namespace Engine
 			layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
 			layout_info.pBindings = bindings.data();
 
-			VK_CHECK(vkCreateDescriptorSetLayout(Global::device->GetVkDevice(), &layout_info, nullptr, &vkDescriptorSetLayout), "Failed to create descriptor set layout.");
+			VT_CHECK(vkCreateDescriptorSetLayout(Global::device->GetVkDevice(), &layout_info, nullptr, &vkDescriptorSetLayout));
 		}
 
 		DescriptorSetLayout::~DescriptorSetLayout()

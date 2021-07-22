@@ -120,7 +120,7 @@ void Map::Async_PopulateBlocks(int start, int end)
 
 void Map::PopulateBlocks(glm::vec2 view_position)
 {	
-	MW_PROFILER_SCOPE();
+	VT_PROFILER_SCOPE();
 
 	CalculateVisibleBlocks(view_position);
 

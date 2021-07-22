@@ -56,12 +56,12 @@ namespace Engine
 			{
 				if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 				{
-					WARN_OUT("Validation layer: {0}", pCallbackData->pMessage);
+					VT_WARN_OUT("Validation layer: {0}", pCallbackData->pMessage);
 				}
 
 				if (messageSeverity > VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 				{
-					ERR_OUT("Validation layer: {0}", pCallbackData->pMessage);
+					VT_ERR_OUT("Validation layer: {0}", pCallbackData->pMessage);
 				}
 
 				return VK_FALSE;
@@ -101,7 +101,7 @@ namespace Engine
 
 				if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS)
 				{
-					THROW("Failed to set up debug messenger.");
+					VT_THROW("Failed to set up debug messenger.");
 				}
 			}
 

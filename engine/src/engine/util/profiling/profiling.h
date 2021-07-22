@@ -17,15 +17,14 @@
 
 #pragma once
 
-// #define ENABLE_PROFILING
+// #define VT_ENABLE_PROFILING
 
-#ifdef ENABLE_PROFILING
+#ifdef VT_ENABLE_PROFILING
 
-#include <string>
-#include <chrono>
 #include <algorithm>
 #include <fstream>
-
+#include <string>
+#include <chrono>
 #include <thread>
 
 namespace Engine
@@ -34,7 +33,6 @@ namespace Engine
 	{
 		namespace Profiler
 		{
-
 			struct ProfileResult
 			{
 				std::string Name;
@@ -152,13 +150,13 @@ namespace Engine
 	}
 }
 
-#	define MW_PROFILER_BEGIN(NAME) 			::Engine::Util::Profiler::Instrumentor::Get().BeginSession(NAME)
-#	define MW_PROFILER_END() 				::Engine::Util::Profiler::Instrumentor::Get().EndSession()
-#	define MW_PROFILER_SCOPE() 				::Engine::Util::Profiler::InstrumentationTimer timer(__func__)
-#	define MW_PROFILER_NAMED_SCOPE(NAME) 	::Engine::Util::Profiler::InstrumentationTimer timer(NAME)
+#	define VT_PROFILER_BEGIN(NAME) 			::Engine::Util::Profiler::Instrumentor::Get().BeginSession(NAME)
+#	define VT_PROFILER_END() 				::Engine::Util::Profiler::Instrumentor::Get().EndSession()
+#	define VT_PROFILER_SCOPE() 				::Engine::Util::Profiler::InstrumentationTimer timer(__func__)
+#	define VT_PROFILER_NAMED_SCOPE(NAME) 	::Engine::Util::Profiler::InstrumentationTimer timer(NAME)
 #else
-#	define MW_PROFILER_BEGIN(NAME) 			VOID_ASSEMBLY
-#	define MW_PROFILER_END() 				VOID_ASSEMBLY
-#	define MW_PROFILER_SCOPE() 				VOID_ASSEMBLY
-#	define MW_PROFILER_NAMED_SCOPE(NAME) 	VOID_ASSEMBLY
+#	define VT_PROFILER_BEGIN(NAME) 			VT_VOID_ASSEMBLY
+#	define VT_PROFILER_END() 				VT_VOID_ASSEMBLY
+#	define VT_PROFILER_SCOPE() 				VT_VOID_ASSEMBLY
+#	define VT_PROFILER_NAMED_SCOPE(NAME) 	VT_VOID_ASSEMBLY
 #endif

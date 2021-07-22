@@ -16,7 +16,7 @@ namespace Engine
 			data = stbi_load(fullPath.c_str(), &width, &height, &amountOfChannels, 0);
 			if (!data)
 			{
-				ERR_OUT("Failed to open a file: {0}", fullPath);
+				VT_ERR_OUT("Failed to open a file: {0}", fullPath);
 			}
 			size = {static_cast<float>(width), static_cast<float>(height)};
 		}

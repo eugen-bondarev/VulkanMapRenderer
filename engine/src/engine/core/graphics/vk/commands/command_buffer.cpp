@@ -15,16 +15,16 @@ namespace Engine
 			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 			allocInfo.commandBufferCount = 1;
 
-			VK_CHECK(vkAllocateCommandBuffers(Global::device->GetVkDevice(), &allocInfo, &vkCommandBuffer), "Failed to allocate command buffers.");
+			VT_CHECK(vkAllocateCommandBuffers(Global::device->GetVkDevice(), &allocInfo, &vkCommandBuffer));
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		CommandBuffer::~CommandBuffer()
 		{
 			Free();
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		void CommandBuffer::Begin(VkCommandBufferUsageFlags flags) const
@@ -34,12 +34,12 @@ namespace Engine
 			begin_info.flags = flags;			   // Optional
 			begin_info.pInheritanceInfo = nullptr; // Optional
 
-			VK_CHECK(vkBeginCommandBuffer(vkCommandBuffer, &begin_info), "Failed to begin recording command buffer.");
+			VT_CHECK(vkBeginCommandBuffer(vkCommandBuffer, &begin_info));
 		}
 
 		void CommandBuffer::End() const
 		{
-			VK_CHECK(vkEndCommandBuffer(vkCommandBuffer), "Failed to record command buffer.");
+			VT_CHECK(vkEndCommandBuffer(vkCommandBuffer));
 		}
 
 		void CommandBuffer::SubmitToQueue(const VkQueue &queue, VkSemaphore *wait_semaphore, const VkSemaphore *signal_semaphore, VkFence fence) const
@@ -64,7 +64,7 @@ namespace Engine
 				submit_info.pSignalSemaphores = signal_semaphore;
 			}
 
-			VK_CHECK(vkQueueSubmit(queue, 1, &submit_info, fence), "Failed to submit queue.");
+			VT_CHECK(vkQueueSubmit(queue, 1, &submit_info, fence));
 		}
 
 		void CommandBuffer::BeginRenderPass(RenderPass *render_pass, Framebuffer *framebuffer) const
@@ -94,7 +94,7 @@ namespace Engine
 
 		void CommandBuffer::BindVertexBuffers(const std::vector<Buffer *> &buffers, const std::vector<VkDeviceSize> &offsets) const
 		{
-			VK_ASSERT(buffers.size() == offsets.size());
+			VT_ASSERT(buffers.size() == offsets.size());
 
 			std::vector<VkBuffer> vkBuffers(buffers.size());
 			for (int i = 0; i < buffers.size(); i++)

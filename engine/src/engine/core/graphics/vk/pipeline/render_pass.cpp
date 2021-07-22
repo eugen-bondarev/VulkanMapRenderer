@@ -64,16 +64,16 @@ namespace Engine
 			render_pass_info.dependencyCount = static_cast<uint32_t>(dependencies.size());
 			render_pass_info.pDependencies = dependencies.data();
 
-			VK_CHECK(vkCreateRenderPass(Global::device->GetVkDevice(), &render_pass_info, nullptr, &vkRenderPass), "Failed to create render pass.");
+			VT_CHECK(vkCreateRenderPass(Global::device->GetVkDevice(), &render_pass_info, nullptr, &vkRenderPass));
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		RenderPass::~RenderPass()
 		{
 			vkDestroyRenderPass(Global::device->GetVkDevice(), vkRenderPass, nullptr);
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		VkRenderPass& RenderPass::GetVkRenderPass()

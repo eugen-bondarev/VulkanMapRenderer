@@ -19,21 +19,21 @@ namespace Engine
 			pool_info.queueFamilyIndex = Global::Queues::indices.graphicsFamily.value();
 			pool_info.flags = 0; // Optional
 
-			VK_CHECK(vkCreateCommandPool(Global::device->GetVkDevice(), &pool_info, nullptr, &vkCommandPool), "Failed to create command pool.");
+			VT_CHECK(vkCreateCommandPool(Global::device->GetVkDevice(), &pool_info, nullptr, &vkCommandPool));
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		CommandPool::~CommandPool()
 		{
 			vkDestroyCommandPool(Global::device->GetVkDevice(), vkCommandPool, nullptr);
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		void CommandPool::Reset() const
 		{
-			VK_CHECK(vkResetCommandPool(Global::device->GetVkDevice(), vkCommandPool, 0), "Failed to reset command pool.");
+			VT_CHECK(vkResetCommandPool(Global::device->GetVkDevice(), vkCommandPool, 0));
 		}
 
 		VkCommandPool CommandPool::GetVkCommandPool() const

@@ -42,7 +42,7 @@ namespace Engine
 			alloc_info.descriptorSetCount = 1;
 			alloc_info.pSetLayouts = layouts.data();
 
-			VK_CHECK(vkAllocateDescriptorSets(Global::device->GetVkDevice(), &alloc_info, &vkDescriptorSet), "Failed to allocate descriptor sets.");
+			VT_CHECK(vkAllocateDescriptorSets(Global::device->GetVkDevice(), &alloc_info, &vkDescriptorSet));
 		}
 
 		DescriptorSet::~DescriptorSet()

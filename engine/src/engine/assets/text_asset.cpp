@@ -15,7 +15,7 @@ namespace Engine
 
 			if (!file.is_open())
 			{
-				ERR_OUT("Failed to open a file: {0}", fullPath);
+				VT_ERR_OUT("Failed to open a file: {0}", fullPath);
 			}
 
 			size_t fileSize = (size_t)file.tellg();

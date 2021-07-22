@@ -37,7 +37,7 @@ namespace Engine
 			size = { static_cast<float>(w), static_cast<float>(h) };
 		});
 
-		TRACE();
+		VT_TRACE();
 	}
 
 	bool Window::ShouldClose() const
@@ -52,7 +52,7 @@ namespace Engine
 
 	Window::~Window()
 	{
-		TRACE();
+		VT_TRACE();
 	}
 
 	GLFWwindow* Window::GetGLFWWindow()

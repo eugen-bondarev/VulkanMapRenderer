@@ -20,17 +20,17 @@ namespace Engine
 			create_info.subresourceRange.baseArrayLayer = 0;
 			create_info.subresourceRange.layerCount = 1;
 
-			VK_CHECK(vkCreateImageView(Global::device->GetVkDevice(), &create_info, nullptr, &vkImageView), "Failed to create texture image view.");
+			VT_CHECK(vkCreateImageView(Global::device->GetVkDevice(), &create_info, nullptr, &vkImageView));
 
 			SetupDefaultDescriptor();
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		ImageView::~ImageView()
 		{
 			vkDestroyImageView(Global::device->GetVkDevice(), vkImageView, nullptr);
-			TRACE();
+			VT_TRACE();
 		}
 
 		VkImageView& ImageView::GetVkImageView()

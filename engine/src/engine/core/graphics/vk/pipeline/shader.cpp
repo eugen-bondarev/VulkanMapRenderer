@@ -16,7 +16,7 @@ namespace Engine
 				create_info.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
 				VkShaderModule shader_module;
-				VK_CHECK (vkCreateShaderModule(Global::device->GetVkDevice(), &create_info, nullptr, &shader_module), "Failed to create shader module.");
+				VT_CHECK(vkCreateShaderModule(Global::device->GetVkDevice(), &create_info, nullptr, &shader_module));
 
 				return shader_module;
 			}
@@ -42,7 +42,7 @@ namespace Engine
 			stages[0] = vert_shader_stage_info;
 			stages[1] = frag_shader_stage_info;
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		Shader::~Shader()
@@ -50,7 +50,7 @@ namespace Engine
 			for (const auto& module : modules)
 				vkDestroyShaderModule(Global::device->GetVkDevice(), module, nullptr);
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		const std::array<VkShaderModule, 2>& Shader::GetModules() const

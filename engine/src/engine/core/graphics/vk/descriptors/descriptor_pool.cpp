@@ -30,7 +30,7 @@ namespace Engine
 			pool_info.maxSets = 1000 * pool_sizes.size();
 			pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
 			pool_info.pPoolSizes = pool_sizes.data();
-			VK_CHECK(vkCreateDescriptorPool(Global::device->GetVkDevice(), &pool_info, nullptr, &vkDescriptorPool), "Failed to create descriptor pool.");
+			VT_CHECK(vkCreateDescriptorPool(Global::device->GetVkDevice(), &pool_info, nullptr, &vkDescriptorPool));
 		}
 
 		DescriptorPool::~DescriptorPool()

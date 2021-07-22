@@ -45,7 +45,7 @@ void NaturaForge::InitOffscreenPipelineResources()
 
 	offscreen.pipeline = new Vk::Pipeline(
 		vs_code.GetContent(), fs_code.GetContent(), 
-		ExtentToVec2(Vk::Global::swapChain->GetExtent()),
+		Util::Math::ExtentToVec2(Vk::Global::swapChain->GetExtent()),
 		{ Vk::Util::CreateAttachment(VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) },
 		binding_descriptors, attribute_descriptors,
 		{ offscreen.descriptorSetLayout->GetVkDescriptorSetLayout() }
@@ -133,7 +133,7 @@ void NaturaForge::InitCompositionPipelineResources()
 
 	composition.pipeline = new Vk::Pipeline(
 		vs_code.GetContent(), fs_code.GetContent(), 
-		ExtentToVec2(Vk::Global::swapChain->GetExtent()),
+		Util::Math::ExtentToVec2(Vk::Global::swapChain->GetExtent()),
 		{ Vk::Util::CreateAttachment(
 			Vk::Global::swapChain->GetImageFormat(), 
 			VK_IMAGE_LAYOUT_UNDEFINED, 
@@ -310,7 +310,7 @@ void NaturaForge::UpdateMap()
 				std::vector<glm::vec4> render_data;
 				MapRenderer::GetRenderData(game->map.get(), game->camera.GetPosition(), render_data);
 
-				MW_PROFILER_NAMED_SCOPE("Update buffer");
+				VT_PROFILER_NAMED_SCOPE("Update buffer");
 				offscreen.dynamicVertexBuffer->Update(render_data.data(), static_cast<uint32_t>(sizeof(glm::vec4) * game->map->GetAmountOfBlocks()));
 			}
 		}
@@ -319,7 +319,7 @@ void NaturaForge::UpdateMap()
 
 void NaturaForge::UpdateProjectionViewMatrix()
 {
-	MW_PROFILER_SCOPE();
+	VT_PROFILER_SCOPE();
 
 	static float speed = 15.0f;
 
@@ -351,8 +351,8 @@ void NaturaForge::UpdateProjectionViewMatrix()
 }
 
 void NaturaForge::Render(Vk::CommandBuffer* cmd)
-{		
-	MW_PROFILER_SCOPE();
+{	
+	VT_PROFILER_SCOPE();
 
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
 
@@ -361,14 +361,14 @@ void NaturaForge::Render(Vk::CommandBuffer* cmd)
 	cmd->SubmitToQueue(
 		Vk::Global::Queues::graphicsQueue, 
 		&current_frame->GetImageAvailableSemaphore(), 
-		&current_frame->GetRenderFinishedSemaphore(), 
+		&current_frame->GetRenderFinishedSemaphore(),
 		current_frame->GetInFlightFence()
 	);
 }
 
 void NaturaForge::FillImGuiCommandBuffers()
 {
-	MW_PROFILER_SCOPE();
+	VT_PROFILER_SCOPE();
 
 	Vk::CommandPool* pool = imgui.commandPools[Vk::Global::swapChain->GetCurrentImageIndex()];
 	Vk::CommandBuffer* cmd = imgui.commandBuffers[Vk::Global::swapChain->GetCurrentImageIndex()];
@@ -395,7 +395,7 @@ void NaturaForge::FillImGuiCommandBuffers()
 
 void NaturaForge::Present()
 {
-	MW_PROFILER_SCOPE();
+	VT_PROFILER_SCOPE();
 
 	Vk::Global::swapChain->Present(&frameManager->GetCurrentFrame()->GetImGuiRenderFinishedSemaphore(), 1);
 	frameManager->NextFrame();
@@ -403,27 +403,23 @@ void NaturaForge::Present()
 
 void NaturaForge::Update()
 {
-	MW_PROFILER_SCOPE();
+	VT_PROFILER_SCOPE();
 	
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-		// ImGui::ShowDemoWindow();
-		// ImGui::ShowMetricsWindow(nullptr);
 		ImGui::Begin("Info");
 			ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 		ImGui::End();
-
-		// ImGui::Begin("Img");
-		// 	ImGui::Image((ImTextureID)userTextureID, ImVec2(600, 600));
-		// ImGui::End();
 	ImGui::Render();
 
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
 	uint32_t image_index = Vk::Global::swapChain->AcquireImage(current_frame->GetImageAvailableSemaphore());
 
-	if (imagesInFlight[image_index] != VK_NULL_HANDLE) 
+	if (imagesInFlight[image_index] != VK_NULL_HANDLE)
+	{
 		vkWaitForFences(Vk::Global::device->GetVkDevice(), 1, &imagesInFlight[image_index], VK_TRUE, UINT64_MAX);
+	} 
 
 	vkWaitForFences(Vk::Global::device->GetVkDevice(), 1, &current_frame->GetInFlightFence(), VK_TRUE, UINT64_MAX);
 	vkResetFences(Vk::Global::device->GetVkDevice(), 1, &current_frame->GetInFlightFence());
@@ -433,6 +429,7 @@ void NaturaForge::Update()
 	// Game logic
 	game->camera.CheckPositionChange();
 	UpdateProjectionViewMatrix();
+
 	UpdateMap();
 
 	// Renderer
@@ -462,7 +459,6 @@ void NaturaForge::ShutdownImGui()
 	for (auto& pool : imgui.commandPools)
 		delete pool;
 
-	// delete imGuiPipeline;
 	delete imgui.renderPass;
 }
 

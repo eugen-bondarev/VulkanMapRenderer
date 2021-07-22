@@ -17,7 +17,7 @@ namespace Engine
 				buffer_info.usage = usage;
 				buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-				VK_CHECK(vkCreateBuffer(Global::device->GetVkDevice(), &buffer_info, nullptr, &buffer), "Failed to create buffer.");
+				VT_CHECK(vkCreateBuffer(Global::device->GetVkDevice(), &buffer_info, nullptr, &buffer));
 
 				VkMemoryRequirements mem_requirements;
 				vkGetBufferMemoryRequirements(Global::device->GetVkDevice(), buffer, &mem_requirements);
@@ -27,7 +27,7 @@ namespace Engine
 				alloc_info.allocationSize = mem_requirements.size;
 				alloc_info.memoryTypeIndex = Global::device->FindMemoryType(mem_requirements.memoryTypeBits, properties);
 
-				VK_CHECK(vkAllocateMemory(Global::device->GetVkDevice(), &alloc_info, nullptr, &buffer_memory), "Failed to allocate buffer memory.");
+				VT_CHECK(vkAllocateMemory(Global::device->GetVkDevice(), &alloc_info, nullptr, &buffer_memory));
 
 				vkBindBufferMemory(Global::device->GetVkDevice(), buffer, buffer_memory, 0);
 			}

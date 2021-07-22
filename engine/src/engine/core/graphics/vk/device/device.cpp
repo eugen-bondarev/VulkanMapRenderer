@@ -21,14 +21,14 @@ namespace Engine
 				PickPhysicalDevice();
 				CreateLogicalDevice();
 
-				TRACE();
+				VT_TRACE();
 			}
 
 			Device::~Device()
 			{
 				vkDestroyDevice(vkDevice, nullptr);
 
-				TRACE();
+				VT_TRACE();
 			}
 
 			bool Device::CheckDeviceExtensionSupport(VkPhysicalDevice device)
@@ -56,7 +56,7 @@ namespace Engine
 
 				if (deviceCount == 0)
 				{
-					THROW("Failed to find GPUs with Vulkan support.");
+					VT_THROW("Failed to find GPUs with Vulkan support.");
 				}
 
 				std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -77,7 +77,7 @@ namespace Engine
 
 				if (vkPhysicalDevice == VK_NULL_HANDLE)
 				{
-					THROW("Failed to find a suitable GPU.");
+					VT_THROW("Failed to find a suitable GPU.");
 				}
 			}
 
@@ -94,7 +94,7 @@ namespace Engine
 					}
 				}
 
-				THROW("Failed to find suitable memory type.");
+				VT_THROW("Failed to find suitable memory type.");
 
 				return 0;
 			}
@@ -160,7 +160,7 @@ namespace Engine
 					create_info.enabledLayerCount = 0;
 				}
 
-				VK_CHECK(vkCreateDevice(vkPhysicalDevice, &create_info, nullptr, &vkDevice), "Failed to create logical device.");
+				VT_CHECK(vkCreateDevice(vkPhysicalDevice, &create_info, nullptr, &vkDevice));
 
 				vkGetDeviceQueue(vkDevice, Queues::indices.graphicsFamily.value(), 0, &Queues::graphicsQueue);
 				vkGetDeviceQueue(vkDevice, Queues::indices.presentFamily.value(), 0, &Queues::presentQueue);

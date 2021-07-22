@@ -63,7 +63,7 @@ namespace Engine
 				} 
 				else 
 				{
-					THROW("Unsupported layout transition.");
+					VT_THROW("Unsupported layout transition.");
 				}
 
 				vkCmdPipelineBarrier(
@@ -136,7 +136,7 @@ namespace Engine
 			image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			image_info.samples = VK_SAMPLE_COUNT_1_BIT;
 			image_info.flags = 0; // Optional
-			VK_CHECK(vkCreateImage(Global::device->GetVkDevice(), &image_info, nullptr, &vkImage), "Failed to create image.");
+			VT_CHECK(vkCreateImage(Global::device->GetVkDevice(), &image_info, nullptr, &vkImage));
 
 			VkMemoryRequirements mem_requirements;
 			vkGetImageMemoryRequirements(Global::device->GetVkDevice(), vkImage, &mem_requirements);
@@ -146,21 +146,21 @@ namespace Engine
 			alloc_info.allocationSize = mem_requirements.size;
 			alloc_info.memoryTypeIndex = Global::device->FindMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-			VK_CHECK(vkAllocateMemory(Global::device->GetVkDevice(), &alloc_info, nullptr, &vkMemory), "Failed to allocate image memory.");
+			VT_CHECK(vkAllocateMemory(Global::device->GetVkDevice(), &alloc_info, nullptr, &vkMemory));
 
 			vkBindImageMemory(Global::device->GetVkDevice(), vkImage, vkMemory, 0);
 
 			Util::TransitionImageLayout(vkImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 			Util::CopyBufferToImage(buffer->GetVkBuffer(), vkImage, static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
 			Util::TransitionImageLayout(vkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			TRACE();
+			VT_TRACE();
 		}
 
 		Image::~Image()
 		{
 			vkDestroyImage(Global::device->GetVkDevice(), vkImage, nullptr);
 			vkFreeMemory(Global::device->GetVkDevice(), vkMemory, nullptr);
-			TRACE();
+			VT_TRACE();
 		}
 
 		VkImage& Image::GetVkImage()

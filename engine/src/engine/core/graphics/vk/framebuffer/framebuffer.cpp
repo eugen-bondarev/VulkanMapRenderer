@@ -17,16 +17,16 @@ namespace Engine
 			framebuffer_info.height = static_cast<uint32_t>(size.y);
 			framebuffer_info.layers = 1;
 
-			VK_CHECK(vkCreateFramebuffer(Global::device->GetVkDevice(), &framebuffer_info, nullptr, &vkFramebuffer), "Failed to create framebuffer.");
+			VT_CHECK(vkCreateFramebuffer(Global::device->GetVkDevice(), &framebuffer_info, nullptr, &vkFramebuffer));
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		Framebuffer::~Framebuffer()
 		{
 			vkDestroyFramebuffer(Global::device->GetVkDevice(), vkFramebuffer, nullptr);
 
-			TRACE();
+			VT_TRACE();
 		}
 
 		VkFramebuffer Framebuffer::GetVkFramebuffer() const
