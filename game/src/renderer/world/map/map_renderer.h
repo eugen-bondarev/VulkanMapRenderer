@@ -19,7 +19,10 @@ public:
 	void FillCommandBuffers();
 	void GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& data);
 
+	void Render(Engine::Vk::Frame* frame);
+
 	std::vector<Engine::Vk::CommandBuffer*>& GetCommandBuffers();
+	Engine::Vk::CommandBuffer* GetCurrentCmd();
 
 private:
 	const std::shared_ptr<Game>& game;

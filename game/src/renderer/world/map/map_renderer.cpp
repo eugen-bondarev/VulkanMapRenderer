@@ -8,15 +8,17 @@
 #include <future>
 #include <execution>
 
+using namespace Engine;
+
 MapRenderer* mapRenderer;
 
-MapRenderer::MapRenderer(Engine::Vk::DescriptorPool* descriptor_pool, const std::shared_ptr<Game>& game) : game { game }
+MapRenderer::MapRenderer(Vk::DescriptorPool* descriptor_pool, const std::shared_ptr<Game>& game) : game { game }
 {
 	colorPass = new Offscreen::ColorPass(game, descriptor_pool);
 	composition = new Composition(descriptor_pool, colorPass->GetOutputDescriptorImageInfo());
 	
-	for (int i = 0; i < Engine::Vk::Global::swapChain->GetImageViews().size(); i++)
-		commandBuffers.push_back(new Engine::Vk::CommandBuffer(Engine::Vk::Global::commandPool));
+	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
+		commandBuffers.push_back(new Vk::CommandBuffer(Vk::Global::commandPool));
 }
 
 MapRenderer::~MapRenderer()
@@ -32,8 +34,8 @@ void MapRenderer::FillCommandBuffers()
 {	
 	for (int i = 0; i < commandBuffers.size(); i++)
 	{
-		Engine::Vk::CommandBuffer* cmd = commandBuffers[i];
-		Engine::Vk::Framebuffer* framebuffer = Engine::Vk::Global::swapChain->GetFramebuffers()[i];
+		Vk::CommandBuffer* cmd = commandBuffers[i];
+		Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetFramebuffers()[i];
 
 		cmd->Begin();
 			colorPass->WriteToCmd(cmd);
@@ -133,7 +135,26 @@ void MapRenderer::GetRenderData(Map* map, glm::vec2 view_position, std::vector<g
 #endif
 }
 
-std::vector<Engine::Vk::CommandBuffer*>& MapRenderer::GetCommandBuffers()
+void MapRenderer::Render(Vk::Frame* frame)
+{	
+	VT_PROFILER_SCOPE();
+
+	VkSemaphore* wait = &frame->GetImageAvailableSemaphore();
+	VkSemaphore* signal = &frame->GetRenderFinishedSemaphore();
+	VkFence fence = frame->GetInFlightFence();
+	Vk::CommandBuffer* cmd = GetCurrentCmd();
+
+	vkResetFences(Vk::Global::device->GetVkDevice(), 1, &fence);
+	cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal, fence);
+}
+
+std::vector<Vk::CommandBuffer*>& MapRenderer::GetCommandBuffers()
 {
 	return commandBuffers;
+}
+
+Engine::Vk::CommandBuffer* MapRenderer::GetCurrentCmd()
+{
+	uint32_t image_index = Vk::Global::swapChain->GetCurrentImageIndex(); 
+	return commandBuffers[image_index];
 }

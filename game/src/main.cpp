@@ -28,7 +28,6 @@ void NaturaForge::InitImGui()
 		{ Vk::Util::CreateAttachment(
 			Vk::Global::swapChain->GetImageFormat(), 
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 
-			// VK_IMAGE_LAYOUT_UNDEFINED, 
 			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
 			VK_ATTACHMENT_LOAD_OP_LOAD, 
 			VK_ATTACHMENT_STORE_OP_STORE
@@ -38,7 +37,6 @@ void NaturaForge::InitImGui()
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	// io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
 	ImGui::StyleColorsDark();
 
@@ -71,7 +69,6 @@ void NaturaForge::InitImGui()
 	// Create command buffers for each swap chain image.
 	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
 	{
-		// imgui.commandPool = new Vk::CommandPool();
 		Vk::CommandPool* commandPool = new Vk::CommandPool();
 		imgui.commandBuffers.push_back(new Vk::CommandBuffer(commandPool));
 		imgui.commandPools.push_back(commandPool);
@@ -106,12 +103,7 @@ void NaturaForge::UpdateMap()
 		if (!(game->map->lastVisibleBlocks.start == game->map->visibleBlocks.start && game->map->lastVisibleBlocks.end == game->map->visibleBlocks.end))
 		{
 			game->map->PopulateBlocks(game->camera.GetPosition());
-
 			mapRenderer->Update();
-
-			// std::vector<glm::vec4> render_data;			
-			// mapRenderer->GetRenderData(game->map.get(), game->camera.GetPosition(), render_data);			
-			// mapRenderer->colorPass->UpdateBlocks(render_data);
 		}
 	}
 }
@@ -151,14 +143,12 @@ void NaturaForge::Render(Vk::CommandBuffer* cmd)
 
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
 
-	vkResetFences(Vk::Global::device->GetVkDevice(), 1, &current_frame->GetInFlightFence());
+	VkSemaphore* wait = &current_frame->GetImageAvailableSemaphore();
+	VkSemaphore* signal = &current_frame->GetRenderFinishedSemaphore();
+	VkFence fence = current_frame->GetInFlightFence();
 
-	cmd->SubmitToQueue(
-		Vk::Global::Queues::graphicsQueue, 
-		&current_frame->GetImageAvailableSemaphore(), 
-		&current_frame->GetRenderFinishedSemaphore(),
-		current_frame->GetInFlightFence()
-	);
+	vkResetFences(Vk::Global::device->GetVkDevice(), 1, &fence);
+	cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal, fence);
 }
 
 void NaturaForge::FillImGuiCommandBuffers()
@@ -170,6 +160,8 @@ void NaturaForge::FillImGuiCommandBuffers()
 	Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetCurrentScreenFramebuffer();
 
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
+	VkSemaphore* wait = &current_frame->GetRenderFinishedSemaphore();
+	VkSemaphore* signal = &current_frame->GetImGuiRenderFinishedSemaphore();
 	
 	std::future<void> a = std::async(std::launch::async, [&]()
 	{
@@ -180,11 +172,7 @@ void NaturaForge::FillImGuiCommandBuffers()
 			cmd->EndRenderPass();
 		cmd->End();
 
-		cmd->SubmitToQueue(
-			Vk::Global::Queues::graphicsQueue,
-			&current_frame->GetRenderFinishedSemaphore(),
-			&current_frame->GetImGuiRenderFinishedSemaphore()
-		);
+		cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal);
 	});
 }
 
@@ -235,9 +223,7 @@ void NaturaForge::Update()
 
 	RenderUI();
 
-	// Renderer
-	Vk::CommandBuffer* current_command_buffer = mapRenderer->GetCommandBuffers()[image_index];
-	Render(current_command_buffer);
+	mapRenderer->Render(frameManager->GetCurrentFrame());
 
 	FillImGuiCommandBuffers();
 
