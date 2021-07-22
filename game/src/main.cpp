@@ -65,17 +65,17 @@ void NaturaForge::InitOffscreenPipelineResources()
 	// Load image
 	const Assets::Image map_texture("assets/textures/map.png");
 
-	tileMap = TextureAtlas::Add<BlocksTileMap>(TextureAtlasType::Map, std::make_shared<BlocksTileMap>(
+	offscreen.block.tileMap = TextureAtlas::Add<BlocksTileMap>(TextureAtlasType::Map, std::make_shared<BlocksTileMap>(
 		glm::vec2(8.0f),
 		map_texture.GetSize(),
 		map_texture.GetAmountOfChannels(),
 		map_texture.GetData()
 	));
 
-	tileMap->Add(BlockType::Dirt, glm::vec2(1, 1));
-	tileMap->Add(BlockType::Grass, glm::vec2(1, 7));
-	tileMap->Add(BlockType::Stone, glm::vec2(7, 1));
-	tileMap->Add(BlockType::Wood, glm::vec2(13, 1));
+	offscreen.block.tileMap->Add(BlockType::Dirt, glm::vec2(1, 1));
+	offscreen.block.tileMap->Add(BlockType::Grass, glm::vec2(1, 7));
+	offscreen.block.tileMap->Add(BlockType::Stone, glm::vec2(7, 1));
+	offscreen.block.tileMap->Add(BlockType::Wood, glm::vec2(13, 1));
 
 	// Creating descriptor set
 	offscreen.descriptorSet = new Vk::DescriptorSet(common.descriptorPool, { offscreen.descriptorSetLayout->GetVkDescriptorSetLayout() });
@@ -83,7 +83,7 @@ void NaturaForge::InitOffscreenPipelineResources()
 	std::vector<VkWriteDescriptorSet> offscreen_write_descriptor_sets = 
 	{
 		Vk::CreateWriteDescriptorSet(offscreen.descriptorSet, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &offscreen.ubo.perScene.buffer->GetDescriptor()),
-		Vk::CreateWriteDescriptorSet(offscreen.descriptorSet, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &tileMap->GetImageView()->GetDescriptor())
+		Vk::CreateWriteDescriptorSet(offscreen.descriptorSet, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &offscreen.block.tileMap->GetImageView()->GetDescriptor())
 	};
 
 	offscreen.descriptorSet->Update(offscreen_write_descriptor_sets);
@@ -233,7 +233,7 @@ void NaturaForge::InitImGui()
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	// io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
 	ImGui::StyleColorsDark();
 
@@ -294,7 +294,7 @@ void NaturaForge::Init()
 
 	InitImGui();
 
-	// userTextureID = ImGui_ImplVulkan_AddTexture(tileMap->GetImageView()->GetDescriptor().sampler, tileMap->GetImageView()->GetDescriptor().imageView, tileMap->GetImageView()->GetDescriptor().imageLayout);
+	// userTextureID = ImGui_ImplVulkan_AddTexture(offscreen.block.tileMap->GetImageView()->GetDescriptor().sampler, offscreen.block.tileMap->GetImageView()->GetDescriptor().imageView, offscreen.block.tileMap->GetImageView()->GetDescriptor().imageLayout);
 }
 
 void NaturaForge::UpdateMap()
@@ -380,7 +380,7 @@ void NaturaForge::FillImGuiCommandBuffers()
 	{
 		pool->Reset();
 		cmd->Begin();
-			cmd->BeginRenderPass(imgui.renderPass, framebuffer);					
+			cmd->BeginRenderPass(imgui.renderPass, framebuffer);
 				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->GetVkCommandBuffer());
 			cmd->EndRenderPass();
 		cmd->End();
@@ -391,6 +391,21 @@ void NaturaForge::FillImGuiCommandBuffers()
 			&current_frame->GetImGuiRenderFinishedSemaphore()
 		);
 	});
+}
+
+void NaturaForge::RenderUI()
+{	
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
+	ImGui::Begin("Info");
+		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+	ImGui::End();
+
+	ImGui::ShowDemoWindow();
+
+	ImGui::Render();
 }
 
 void NaturaForge::Present()
@@ -404,14 +419,6 @@ void NaturaForge::Present()
 void NaturaForge::Update()
 {
 	VT_PROFILER_SCOPE();
-	
-	ImGui_ImplVulkan_NewFrame();
-	ImGui_ImplGlfw_NewFrame();
-	ImGui::NewFrame();
-		ImGui::Begin("Info");
-			ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-		ImGui::End();
-	ImGui::Render();
 
 	Vk::Frame* current_frame = frameManager->GetCurrentFrame();
 	uint32_t image_index = Vk::Global::swapChain->AcquireImage(current_frame->GetImageAvailableSemaphore());
@@ -429,14 +436,16 @@ void NaturaForge::Update()
 	// Game logic
 	game->camera.CheckPositionChange();
 	UpdateProjectionViewMatrix();
-
 	UpdateMap();
+
+	RenderUI();
 
 	// Renderer
 	Vk::CommandBuffer* current_command_buffer = commandBuffers[image_index];
-
 	Render(current_command_buffer);
+
 	FillImGuiCommandBuffers();
+
 	Present();
 
 	// Update and Render additional Platform Windows		
@@ -467,8 +476,6 @@ void NaturaForge::Shutdown()
 	Vk::Global::device->WaitIdle();
 
 	ShutdownImGui();
-	
-	tileMap.reset();
 
 	delete offscreen.texture;
 	delete offscreen.framebuffer;

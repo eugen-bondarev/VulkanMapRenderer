@@ -31,7 +31,10 @@ private:
 
 	void UpdateMap();
 	void UpdateProjectionViewMatrix();
+
+	void RenderUI();
 	void Render(Vk::CommandBuffer* cmd);
+	
 	void Present();
 
 	Vk::FrameManager* frameManager;
@@ -58,6 +61,7 @@ private:
 		{
 			Vk::Buffer* vertexBuffer;
 			Vk::Buffer* indexBuffer;
+			std::shared_ptr<BlocksTileMap> tileMap;
 		} block;
 
 		struct
@@ -103,10 +107,7 @@ private:
 		std::vector<Vk::CommandPool*> commandPools;
 		std::vector<Vk::CommandBuffer*> commandBuffers;
 	} imgui;
-	void FillImGuiCommandBuffers();
-
-	std::shared_ptr<BlocksTileMap> tileMap;
-	
+	void FillImGuiCommandBuffers();	
 };
 
 App* ::Engine::GetApp()
