@@ -102,7 +102,7 @@ void NaturaForge::UpdateMap()
 		game->map->CalculateVisibleChunks(game->camera.GetPosition());
 		if (game->map->lastVisibleChunks.start != game->map->visibleChunks.start || game->map->lastVisibleChunks.end != game->map->visibleChunks.end)
 		{
-			game->map->PopulateBlocks(game->camera.GetPosition());
+			game->map->PopulateBlocks();
 			mapRenderer->Update();
 
 			game->map->lastVisibleChunks = game->map->visibleChunks;

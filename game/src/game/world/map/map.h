@@ -37,13 +37,17 @@ public:
 	Map();
 	~Map();
 
-	Blocks_t& GetBlocks();
-
-	void Async_PopulateBlocks(int start, int end);
-	void PopulateBlocks(glm::vec2 view_position);
-
 	void CalculateVisibleChunks(glm::vec2 view_position);
 
+	/**
+	 * Note:
+	 * 	Make sure to use CalculateVisibleChunks(camera.GetPosition());
+	 * 	before calling this method.
+	 */
+	void PopulateBlocks();
+	void Async_PopulateBlocks(int start, int end);
+
+	Blocks_t& GetBlocks();
 	int GetAmountOfBlocks() const;
 	
 private:

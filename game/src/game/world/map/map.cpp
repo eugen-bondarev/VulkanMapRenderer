@@ -134,11 +134,9 @@ void Map::Async_PopulateBlocks(int start, int end)
 	}
 }
 
-void Map::PopulateBlocks(glm::vec2 view_position)
+void Map::PopulateBlocks()
 {	
 	VT_PROFILER_SCOPE();
-
-	CalculateVisibleChunks(view_position);
 
 	static int cores_to_use = Engine::Util::CPU::AMOUNT_OF_CORES * 2;
 	static int task_length = cores_to_use - 1;	// TODO: Process the case when the value equals to 0.
