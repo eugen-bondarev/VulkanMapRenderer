@@ -17,7 +17,7 @@ public:
 	void UpdateSpace();
 
 	void FillCommandBuffers();
-	void GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& data);
+	void GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& blocks_to_render, std::vector<glm::vec2>& lights_to_render);
 
 	void Render(Engine::Vk::Frame* frame);
 

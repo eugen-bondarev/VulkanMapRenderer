@@ -84,7 +84,7 @@ namespace Offscreen
 		
 		// Dynamic buffer for blocks' positions
 		dynamicVertexBuffer = std::make_shared<Vk::Buffer>(
-			sizeof(Vk::PerInstanceVertex), 
+			sizeof(glm::vec4), 
 			game->map->GetAmountOfBlocks(), 
 			nullptr, 
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
@@ -128,8 +128,7 @@ namespace Offscreen
 	void ColorPass::UpdateBlocks(const std::vector<glm::vec4>& render_data)
 	{
 		VT_PROFILER_NAMED_SCOPE("Update buffer");
-
-		dynamicVertexBuffer->Update(render_data.data(), static_cast<uint32_t>(sizeof(glm::vec4) * game->map->GetAmountOfBlocks()));
+		dynamicVertexBuffer->Update(render_data.data(), static_cast<uint32_t>(sizeof(glm::vec4)) * game->map->GetAmountOfBlocks());
 	}
 
 	void ColorPass::UpdateSpace()

@@ -8,6 +8,8 @@
 #include <future>
 #include <execution>
 
+#include <glm/gtx/norm.hpp>
+
 using namespace Engine;
 
 MapRenderer* mapRenderer;
@@ -46,9 +48,10 @@ void MapRenderer::FillCommandBuffers()
 
 void MapRenderer::Update()
 {
-	std::vector<glm::vec4> render_data;			
-	GetRenderData(game->map.get(), game->camera.GetPosition(), render_data);			
-	colorPass->UpdateBlocks(render_data);
+	std::vector<glm::vec4> blocks_to_render;
+	std::vector<glm::vec2> lights_to_render;
+	GetRenderData(game->map.get(), game->camera.GetPosition(), blocks_to_render, lights_to_render);
+	colorPass->UpdateBlocks(blocks_to_render);
 }
 
 void MapRenderer::UpdateSpace()
@@ -56,7 +59,36 @@ void MapRenderer::UpdateSpace()
 	colorPass->UpdateSpace();
 }
 
-void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& data, BlocksTileMap* tile_map, int start, int end)
+static bool BlockIsLit(glm::vec2 block_position, const std::vector<glm::vec2>& lights)
+{
+	for (int i = 0; i < lights.size(); i++)
+	{
+		if (glm::distance2(block_position, lights[i]) < 5000.0f)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static bool dist(glm::vec2 l_0, glm::vec2 l_1)
+{
+	return glm::distance2(l_0, l_1) < 10.0f;
+}
+
+static bool dist1(glm::vec2 l_0, std::vector<glm::vec2>& lights)
+{
+	for (const auto light : lights)
+	{
+		if (dist(l_0, light))
+			return false;
+	}
+
+	return true;
+}
+
+void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& blocks_to_render, std::vector<glm::vec2>& lights_to_render, BlocksTileMap* tile_map, int start, int end)
 {
 	const auto& blocks = map->GetBlocks();
 
@@ -64,23 +96,79 @@ void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec
 	TileFunction function;
 	glm::vec2 base_tile;
 
+	std::vector<glm::vec2> light_indices;
+
+	for (int x = start; x < end; x++)
+	{
+		for (int y = 0; y < blocks[0].size(); y++)
+		{
+			if (blocks[x][y].type == BlockType::Empty)
+			{
+				// glm::vec2 last_light = light_indices[light_indices.size() - 1];
+
+ 				if (blocks[x][y + 1].type != BlockType::Empty || blocks[x][y - 1].type != BlockType::Empty)
+				{
+					if (light_indices.size() == 0 || dist1(glm::vec2(x, y), light_indices))
+					{
+						lights_to_render.push_back(blocks[x][y].worldPosition);
+						light_indices.emplace_back(x, y);
+					}
+				}
+			}
+		}
+	}
+	
+	// for (int i = 0; i < light_indices.size(); i++)
+	// {
+	// 	glm::vec2 index = light_indices[i];
+
+	// 	for (int _x = -5; _x < 5; _x++)
+	// 	{
+	// 		for (int _y = -5; _y < 5; _y++)
+	// 		{
+	// 			int x = std::max<int>(index.x + _x, 0);
+	// 			int y = std::max<int>(index.y + _y, 0);
+	// 			x = std::min<int>(x, blocks.size() - 1);
+	// 			y = std::min<int>(y, blocks[0].size() - 1);
+
+	// 			if (blocks[x][y].type != BlockType::Empty)
+	// 			{
+	// 				if (blocks[x][y].type != last_type)
+	// 				{
+	// 					function = PickTileFunction(blocks[x][y].type);
+	// 					base_tile = tile_map->Get(blocks[x][y].type);
+	// 				}
+
+	// 				const glm::vec2 block_texture_tile = base_tile + function(blocks, x, y);
+
+	// 				blocks_to_render.emplace_back(blocks[x][y].worldPosition, block_texture_tile);
+
+	// 				last_type = blocks[x][y].type;
+	// 			}
+	// 		}
+	// 	}
+	// }
+
 	for (int x = start; x < end; x++)
 	{
 		for (int y = 0; y < blocks[0].size(); y++)
 		{
 			if (blocks[x][y].type != BlockType::Empty)
 			{
-				if (blocks[x][y].type != last_type)
+				// if (BlockIsLit(blocks[x][y].worldPosition, lights_to_render))
 				{
-					function = PickTileFunction(blocks[x][y].type);
-					base_tile = tile_map->Get(blocks[x][y].type);
+					if (blocks[x][y].type != last_type)
+					{
+						function = PickTileFunction(blocks[x][y].type);
+						base_tile = tile_map->Get(blocks[x][y].type);
+					}
+
+					const glm::vec2 block_texture_tile = base_tile + function(blocks, x, y);
+
+					blocks_to_render.emplace_back(blocks[x][y].worldPosition, block_texture_tile);
+
+					last_type = blocks[x][y].type;
 				}
-
-				const glm::vec2 block_texture_tile = base_tile + function(blocks, x, y);
-
-				data.emplace_back(blocks[x][y].worldPosition, block_texture_tile);
-
-				last_type = blocks[x][y].type;
 			}
 		}
 	}
@@ -89,21 +177,21 @@ void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec
 /*
 * Note: parallelism doesn't work well here
 */
-void MapRenderer::GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& data)
+void MapRenderer::GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& blocks_to_render, std::vector<glm::vec2>& lights_to_render)
 {
 	VT_PROFILER_SCOPE();
 
-	BlocksTileMap *blocksTileMap = TextureAtlas::Get<BlocksTileMap>(TextureAtlasType::Map);
+	BlocksTileMap* blocks_tile_map = TextureAtlas::Get<BlocksTileMap>(TextureAtlasType::Map);
 
 	const auto& blocks = map->GetBlocks();
 
-	data.reserve(blocks.size() * blocks[0].size());
+	blocks_to_render.reserve(blocks.size() * blocks[0].size());
 
 // #define ASYNC
 
 #ifdef ASYNC
 	int length = blocks.size();
-	static int cores_to_use = 256;
+	static int cores_to_use = 128;
 	int task_length = cores_to_use - 1;	// TODO: Process the case when the value equals to 0.
 	int full_fraction = (length - (length % task_length)) / task_length;
 	int last_fraction = length - task_length * full_fraction;
@@ -127,11 +215,11 @@ void MapRenderer::GetRenderData(Map* map, glm::vec2 view_position, std::vector<g
 		intervals.end(),
 		[&](glm::vec2& interval) 
 		{
-			Async_GetRenderData(map, view_position, data, blocksTileMap, interval.x, interval.y);
+			Async_GetRenderData(map, view_position, blocks_to_render, lights_to_render, blocks_tile_map, interval.x, interval.y);
 		}
 	);
 #else
-	Async_GetRenderData(map, view_position, data, blocksTileMap, 0, blocks.size());
+	Async_GetRenderData(map, view_position, blocks_to_render, lights_to_render, blocks_tile_map, 0, blocks.size());
 #endif
 }
 

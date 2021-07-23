@@ -21,7 +21,7 @@ class Map
 {
 public:
 	inline static constexpr float BLOCK_SIZE = 16.0f;
-	inline static constexpr float CHUNK_SIZE = 2.0f;
+	inline static constexpr float CHUNK_SIZE = 4.0f;
 
 	struct VisibleBlocks
 	{

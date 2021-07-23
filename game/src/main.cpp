@@ -112,23 +112,23 @@ void NaturaForge::UpdateProjectionViewMatrix()
 {
 	VT_PROFILER_SCOPE();
 
-	static float speed = 15.0f;
+	static float speed = 150.0f;
 
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_W))
 	{
-		game->camera.AddPosition(glm::vec2(0, -100) * Time::GetDelta() * speed);
+		game->camera.AddPosition(glm::vec2(0, -1) * Time::GetDelta() * speed);
 	}
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_S))
 	{
-		game->camera.AddPosition(glm::vec2(0, 100) * Time::GetDelta() * speed);
+		game->camera.AddPosition(glm::vec2(0, 1) * Time::GetDelta() * speed);
 	}
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_D))
 	{
-		game->camera.AddPosition(glm::vec2(100, 0) * Time::GetDelta() * speed);
+		game->camera.AddPosition(glm::vec2(1, 0) * Time::GetDelta() * speed);
 	}
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_A))
 	{
-		game->camera.AddPosition(glm::vec2(-100, 0) * Time::GetDelta() * speed);
+		game->camera.AddPosition(glm::vec2(-1, 0) * Time::GetDelta() * speed);
 	}
 
 	if (game->camera.GetEvents() & CameraEvents_PositionChanged)
@@ -163,8 +163,8 @@ void NaturaForge::FillImGuiCommandBuffers()
 	VkSemaphore* wait = &current_frame->GetRenderFinishedSemaphore();
 	VkSemaphore* signal = &current_frame->GetImGuiRenderFinishedSemaphore();
 	
-	std::future<void> a = std::async(std::launch::async, [&]()
-	{
+	// std::future<void> a = std::async(std::launch::async, [&]()
+	// {
 		pool->Reset();
 		cmd->Begin();
 			cmd->BeginRenderPass(imgui.renderPass, framebuffer);
@@ -173,7 +173,7 @@ void NaturaForge::FillImGuiCommandBuffers()
 		cmd->End();
 
 		cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal);
-	});
+	// });
 }
 
 void NaturaForge::RenderUI()
@@ -194,7 +194,6 @@ void NaturaForge::Present()
 	VT_PROFILER_SCOPE();
 
 	Vk::Global::swapChain->Present(&frameManager->GetCurrentFrame()->GetImGuiRenderFinishedSemaphore(), 1);
-	frameManager->NextFrame();
 }
 
 void NaturaForge::Update()
@@ -220,19 +219,25 @@ void NaturaForge::Update()
 	UpdateMap();
 
 	RenderUI();
-
+	
 	mapRenderer->Render(frameManager->GetCurrentFrame());
-
 	FillImGuiCommandBuffers();
-
+	
 	Present();
+	
+	frameManager->NextFrame();
 
-	// Update and Render additional Platform Windows		
-	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-	{
-		ImGui::UpdatePlatformWindows();
-		ImGui::RenderPlatformWindowsDefault();
-	}
+	// static float exit_timer = 0;
+	// static float exit_after = 5.0f;
+
+	// exit_timer += Time::GetDelta();
+
+	// if (exit_timer >= exit_after)
+	// {
+	// 	VT_VAR_OUT(Time::GetAverageFPS());
+
+	// 	glfwSetWindowShouldClose(window->GetGLFWWindow(), 1);
+	// }
 }
 
 void NaturaForge::ShutdownImGui()

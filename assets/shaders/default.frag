@@ -12,6 +12,6 @@ layout(binding = 1) uniform sampler2D texSampler;
 
 void main() 
 {
-    // outColor = texture(texSampler, fragTexCoords);	
+    // outColor = texture(texSampler, fragTexCoords);
   	outColor = texture(texSampler, (fragTexCoords + out_Tile) / vec2(AMOUNT_OF_TILES_X, AMOUNT_OF_TILES_Y));
 }

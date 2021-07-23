@@ -17,7 +17,7 @@
 
 #pragma once
 
-// #define VT_ENABLE_PROFILING
+#define VT_ENABLE_PROFILING
 
 #ifdef VT_ENABLE_PROFILING
 
@@ -26,6 +26,8 @@
 #include <string>
 #include <chrono>
 #include <thread>
+
+#include <future>
 
 namespace Engine
 {
@@ -72,9 +74,13 @@ namespace Engine
 					m_CurrentSession = nullptr;
 					m_ProfileCount = 0;
 				}
+				
+				std::mutex mut;
 
 				void WriteProfile(const ProfileResult &result)
 				{
+					std::lock_guard l(mut);
+					
 					if (m_ProfileCount++ > 0)
 						m_OutputStream << ",";
 
