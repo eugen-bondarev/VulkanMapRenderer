@@ -140,9 +140,9 @@ void Map::PopulateBlocks(glm::vec2 view_position)
 
 	CalculateVisibleChunks(view_position);
 
-	int length = visibleChunks.end.x - visibleChunks.start.x;
 	static int cores_to_use = Engine::Util::CPU::AMOUNT_OF_CORES * 2;
 	static int task_length = cores_to_use - 1;	// TODO: Process the case when the value equals to 0.
+	int length = visibleChunks.end.x - visibleChunks.start.x;
 	int full_fraction = (length - (length % task_length)) / task_length;
 	int last_fraction = length - task_length * full_fraction;
 
