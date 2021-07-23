@@ -21,9 +21,13 @@ class Map
 {
 public:
 	inline static constexpr float BLOCK_SIZE = 16.0f;
+
+	/*
+	* These are chunks, but we can go without them by setting CHUNK_SIZE = 1, which I actually do.
+	*/
 	inline static constexpr float CHUNK_SIZE = 1.0f;
 
-	struct VisibleBlocks
+	struct VisibleChunks
 	{
 		glm::ivec2 start;
 		glm::ivec2 end;
@@ -38,7 +42,7 @@ public:
 	void Async_PopulateBlocks(int start, int end);
 	void PopulateBlocks(glm::vec2 view_position);
 
-	void CalculateVisibleBlocks(glm::vec2 view_position);
+	void CalculateVisibleChunks(glm::vec2 view_position);
 
 	int GetAmountOfBlocks() const;
 	

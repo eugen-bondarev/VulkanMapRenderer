@@ -55,7 +55,7 @@ Map::~Map()
 
 }
 
-void Map::CalculateVisibleBlocks(glm::vec2 view_position)
+void Map::CalculateVisibleChunks(glm::vec2 view_position)
 {
 	static glm::vec2 correction = glm::vec2(-16, 16);
 	visibleChunks.start.x = (view_position.x + correction.x - Engine::window->GetSize().x / 2.0f) / 16.0f / CHUNK_SIZE;
@@ -64,26 +64,26 @@ void Map::CalculateVisibleBlocks(glm::vec2 view_position)
 	visibleChunks.end.y = visibleChunks.start.y + Engine::window->GetSize().y / (CHUNK_SIZE * BLOCK_SIZE) + 2;
 
 	visibleChunks.start.y -= 2;
-	// visibleChunks.end.y += 5;
 	visibleChunks.start.x -= 0;
-	// visibleChunks.end.x += 5;
 }
 
 void Map::DetermineDimensionsInBlocks()
 {
-	CalculateVisibleBlocks(glm::vec2 { 0 });
+	CalculateVisibleChunks(glm::vec2 { 0 });
+
+	glm::ivec2 dimensions;
 	
-	int length = (visibleChunks.end.x - visibleChunks.start.x) * CHUNK_SIZE;
-	int height = (visibleChunks.end.y - visibleChunks.start.y) * CHUNK_SIZE;
+	dimensions.x = (visibleChunks.end.x - visibleChunks.start.x) * CHUNK_SIZE;
+	dimensions.y = (visibleChunks.end.y - visibleChunks.start.y) * CHUNK_SIZE;
 
-	blocks.resize(length);
+	blocks.resize(dimensions.x);
 
-	for (int i = 0; i < length; i++)
+	for (int i = 0; i < dimensions.x; i++)
 	{
-		blocks[i].resize(height);
+		blocks[i].resize(dimensions.y);
 	}
 
-	VT_VAR_OUT(length * height);
+	VT_VAR_OUT(dimensions.x * dimensions.y);
 }
 
 void Map::Async_PopulateBlocks(int start, int end)
@@ -93,16 +93,17 @@ void Map::Async_PopulateBlocks(int start, int end)
 
 	glm::ivec2 chunk;
 	glm::ivec2 block_in_chunk;
-	glm::ivec2 block_in_world;
+	glm::ivec2 block_in_grid;
 	glm:: vec2 block_position;
+	glm::ivec2 block_indices;
 
 	for (chunk.x = start; chunk.x < end; chunk.x++)
 	{
 		for (block_in_chunk.x = 0; block_in_chunk.x < CHUNK_SIZE; block_in_chunk.x++)
 		{
-			block_in_world.x = chunk.x * CHUNK_SIZE + block_in_chunk.x;
-
-			block_position.x = block_in_world.x * BLOCK_SIZE;
+			block_in_grid.x = chunk.x * CHUNK_SIZE + block_in_chunk.x;
+			block_position.x = block_in_grid.x * BLOCK_SIZE;
+			block_indices.x = (chunk.x - visibleChunks.start.x) * static_cast<int>(CHUNK_SIZE) + block_in_chunk.x;
 
 			int height_in_this_area = height_variation * noise.GetNoise(block_position.x * settings.size1, 0.0f);
 			float height_noise_at_x = noise.GetNoise(block_position.x * settings.size2, 0.0f);
@@ -111,25 +112,22 @@ void Map::Async_PopulateBlocks(int start, int end)
 			{
 				for (block_in_chunk.y = 0; block_in_chunk.y < CHUNK_SIZE; block_in_chunk.y++)
 				{
-					block_in_world.y = chunk.y * CHUNK_SIZE + block_in_chunk.y;
-
-					block_position.y = block_in_world.y * BLOCK_SIZE;
-
-					glm::ivec2 normalized_indices = (chunk - visibleChunks.start) * static_cast<int>(CHUNK_SIZE) + glm::ivec2(block_in_chunk.x, block_in_chunk.y);
+					block_in_grid.y = chunk.y * CHUNK_SIZE + block_in_chunk.y;
+					block_position.y = block_in_grid.y * BLOCK_SIZE;
+					block_indices.y = (chunk.y - visibleChunks.start.y) * static_cast<int>(CHUNK_SIZE) + block_in_chunk.y;
 
 					if (block_position.y > horizon + height_in_this_area * height_noise_at_x)
 					{
 						float noise_value = noise.GetNoise(block_position.x * settings.size0, block_position.y * settings.size0) * 0.5f + 0.5f;
 						BlockType type = WhatBlockType(noise_value, TilePos::Foreground);
-
-						blocks[normalized_indices.x][normalized_indices.y].type = type;
+						blocks[block_indices.x][block_indices.y].type = type;
 					}
 					else
 					{
-						blocks[normalized_indices.x][normalized_indices.y].type = BlockType::Empty;
+						blocks[block_indices.x][block_indices.y].type = BlockType::Empty;
 					}
 
-					blocks[normalized_indices.x][normalized_indices.y].worldPosition = block_position;
+					blocks[block_indices.x][block_indices.y].worldPosition = block_position;
 				}
 			}
 		}
@@ -140,11 +138,11 @@ void Map::PopulateBlocks(glm::vec2 view_position)
 {	
 	VT_PROFILER_SCOPE();
 
-	CalculateVisibleBlocks(view_position);
+	CalculateVisibleChunks(view_position);
 
 	int length = visibleChunks.end.x - visibleChunks.start.x;
 	static int cores_to_use = Engine::Util::CPU::AMOUNT_OF_CORES * 2;
-	int task_length = cores_to_use - 1;	// TODO: Process the case when the value equals to 0.
+	static int task_length = cores_to_use - 1;	// TODO: Process the case when the value equals to 0.
 	int full_fraction = (length - (length % task_length)) / task_length;
 	int last_fraction = length - task_length * full_fraction;
 
