@@ -159,9 +159,10 @@ void Map::PopulateBlocks(glm::vec2 view_position)
 	int end = start + last_fraction;
 	intervals.emplace_back(start, end);
 
-	std::for_each(std::execution::par,
-		intervals.begin(),
-		intervals.end(),
+	std::for_each(
+		std::execution::par, 
+		std::begin(intervals), 
+		std::end(intervals), 
 		[&](glm::vec2& interval) 
 		{
 			Async_PopulateBlocks(interval.x, interval.y);
