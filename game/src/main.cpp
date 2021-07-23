@@ -100,10 +100,12 @@ void NaturaForge::UpdateMap()
 	if (game->camera.GetEvents() & CameraEvents_PositionChanged)
 	{
 		game->map->CalculateVisibleBlocks(game->camera.GetPosition());
-		if (!(game->map->lastVisibleBlocks.start == game->map->visibleBlocks.start && game->map->lastVisibleBlocks.end == game->map->visibleBlocks.end))
+		if (game->map->lastVisibleChunks.start != game->map->visibleChunks.start || game->map->lastVisibleChunks.end != game->map->visibleChunks.end)
 		{
 			game->map->PopulateBlocks(game->camera.GetPosition());
 			mapRenderer->Update();
+
+			game->map->lastVisibleChunks = game->map->visibleChunks;
 		}
 	}
 }
@@ -112,7 +114,7 @@ void NaturaForge::UpdateProjectionViewMatrix()
 {
 	VT_PROFILER_SCOPE();
 
-	static float speed = 150.0f;
+	static float speed = 1500.0f;
 
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_W))
 	{

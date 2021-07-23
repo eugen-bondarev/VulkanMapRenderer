@@ -21,13 +21,13 @@ class Map
 {
 public:
 	inline static constexpr float BLOCK_SIZE = 16.0f;
-	inline static constexpr float CHUNK_SIZE = 4.0f;
+	inline static constexpr float CHUNK_SIZE = 1.0f;
 
 	struct VisibleBlocks
 	{
 		glm::ivec2 start;
 		glm::ivec2 end;
-	} visibleBlocks, lastVisibleBlocks;
+	} visibleChunks, lastVisibleChunks;
 
 public:
 	Map();
