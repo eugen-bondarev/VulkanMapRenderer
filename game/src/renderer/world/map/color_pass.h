@@ -1,10 +1,12 @@
 #pragma once
 
-#include "game/game.h"
 #include "renderer/atlas/tile_map.h"
 #include "renderer/atlas/texture_atlas.h"
 
 #include <engine/engine.h>
+
+#include "components/map/map.h"
+#include "game/ecs/camera.h"
 
 struct UBOScene
 {
@@ -16,7 +18,7 @@ namespace Offscreen
 	class ColorPass
 	{
 	public:
-		ColorPass(const std::shared_ptr<Game>& game, Engine::Vk::DescriptorPool* descriptor_pool);
+		ColorPass(Map* map, Camera* camera, Engine::Vk::DescriptorPool* descriptor_pool);
 
 		VkDescriptorImageInfo& GetOutputDescriptorImageInfo();
 
@@ -25,7 +27,8 @@ namespace Offscreen
 		void UpdateSpace();
 
 	private:
-		const std::shared_ptr<Game>& game;
+		Map* map;
+		Camera* camera;
 
 		std::shared_ptr<Engine::Vk::Pipeline> pipeline;
 		std::shared_ptr<Engine::Vk::Texture2D> texture;

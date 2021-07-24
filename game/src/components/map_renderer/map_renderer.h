@@ -1,17 +1,19 @@
 #pragma once
 
-#include "game/world/map/map.h"
-#include "game/game.h"
+#include "ecs/ecs.h"
+
+#include "../map/map.h"
+
 #include "renderer/atlas/tile_map.h"
+#include "renderer/world/map/color_pass.h"
+#include "renderer/world/map/composition.h"
 
-#include "color_pass.h"
-#include "composition.h"
-
-class MapRenderer
+class MapRenderer : public Component
 {
 public:
-	MapRenderer(Engine::Vk::DescriptorPool* descriptor_pool, const std::shared_ptr<Game>& game);
+	MapRenderer();
 	~MapRenderer();
+	void Init(Map* map, Camera* camera, Engine::Vk::DescriptorPool* descriptor_pool);
 
 	void Update();
 	void UpdateSpace();
@@ -25,7 +27,8 @@ public:
 	Engine::Vk::CommandBuffer* GetCurrentCmd();
 
 private:
-	const std::shared_ptr<Game>& game;
+	Map* map;
+	Camera* camera;
 
 	std::vector<Engine::Vk::CommandBuffer*> commandBuffers;
 	Offscreen::ColorPass* colorPass;
@@ -34,5 +37,3 @@ private:
 	MapRenderer(const MapRenderer&) = delete;
 	MapRenderer& operator=(const MapRenderer&) = delete;
 };
-
-extern MapRenderer* mapRenderer;

@@ -7,64 +7,57 @@
 
 #include "factory.h"
 
-namespace ecs
+struct Entity;
+struct Component;
+
+struct Component
 {
-	struct Entity;
-	struct Component;
+	Entity* entity;
 
-	struct Component
+	Component()
 	{
-		Component()
-		{
 
-		}
-
-		virtual ~Component()
-		{
-
-		}
-	};
-	
-	struct Entity
-	{
-		std::vector<Component*> components;
-
-		Entity()
-		{
-
-		}
-		
-		virtual ~Entity()
-		{
-			for (auto& component : components)
-				delete component;
-		}
-	};
-
-	template <typename T>
-	T* AddComponent(Entity* entity)
-	{
-		T* component = new T();
-		entity->components.push_back(component);
-		return component;
 	}
 
-	Component* AddComponent(Entity* entity, const std::string& name);
-
-	class MAP : public Component
+	virtual ~Component()
 	{
-	public:
-		float foobar;
 
-		MAP()
-		{
+	}
+};
 
-		}
+struct Entity
+{
+	std::vector<Component*> components;
 
-		~MAP()
-		{
+	Entity()
+	{
 
-		}
-	};
-	REGISTER(MAP);
+	}
+	
+	virtual ~Entity()
+	{
+		for (auto& component : components)
+			delete component;
+	}
+};
+
+template <typename T, typename... Args>
+T* AddComponent(Entity* entity, Args&&... args)
+{
+	T* component = new T(std::forward<Args>(args)...);
+	entity->components.push_back(component);
+	component->entity = entity;
+	return component;
+}
+
+// Component* AddComponent(Entity* entity, const std::string& name);
+
+template <typename T>
+T* GetComponent(Entity* entity)
+{
+	for (int i = 0; i < entity->components.size(); i++)
+		if (T* component = dynamic_cast<T*>(entity->components[i]))
+			return component;
+
+	return nullptr;
 }

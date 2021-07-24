@@ -1,24 +1,17 @@
 #pragma once
 
+#include "ecs/ecs.h"
+
 #include <engine/engine.h>
 
-#include "blocks.h"
+#include "game/world/map/blocks.h"
 
 #include "FastNoiseLite/FastNoiseLite.h"
 
-struct Settings
+class Map : public Component
 {
-	float size0 = 0.3f;
-	float size1 = 0.001f;
-	float size2 = 0.1f;
-	float bias0 = 0.0f;
-	float bias1 = 0.0f;
-};
+friend class MapRenderer;
 
-inline static Settings settings;
-
-class Map
-{
 public:
 	inline static constexpr float BLOCK_SIZE = 16.0f;
 

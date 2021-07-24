@@ -2,7 +2,7 @@
 
 namespace Offscreen
 {	
-	ColorPass::ColorPass(const std::shared_ptr<Game>& game, Engine::Vk::DescriptorPool* descriptor_pool) : game { game }
+	ColorPass::ColorPass(Map* map, Camera* camera, Engine::Vk::DescriptorPool* descriptor_pool) : map { map }, camera { camera }
 	{
 		using namespace Engine;
 
@@ -85,7 +85,7 @@ namespace Offscreen
 		// Dynamic buffer for blocks' positions
 		dynamicVertexBuffer = std::make_shared<Vk::Buffer>(
 			sizeof(glm::vec4), 
-			game->map->GetAmountOfBlocks(), 
+			map->GetAmountOfBlocks(), 
 			nullptr, 
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
@@ -121,19 +121,19 @@ namespace Offscreen
 				cmd->BindVertexBuffers({ block.vertexBuffer.get(), dynamicVertexBuffer.get() }, { 0, 0 });
 				cmd->BindIndexBuffer(block.indexBuffer.get());
 					cmd->BindDescriptorSets(pipeline.get(), 1, &descriptorSet->GetVkDescriptorSet());
-					cmd->DrawIndexed(block.indexBuffer->GetAmountOfElements(), game->map->GetAmountOfBlocks(), 0, 0, 0);
+					cmd->DrawIndexed(block.indexBuffer->GetAmountOfElements(), map->GetAmountOfBlocks(), 0, 0, 0);
 		cmd->EndRenderPass();
 	}
 
 	void ColorPass::UpdateBlocks(const std::vector<glm::vec4>& render_data)
 	{
 		VT_PROFILER_NAMED_SCOPE("Update buffer");
-		dynamicVertexBuffer->Update(render_data.data(), static_cast<uint32_t>(sizeof(glm::vec4)) * game->map->GetAmountOfBlocks());
+		dynamicVertexBuffer->Update(render_data.data(), static_cast<uint32_t>(sizeof(glm::vec4)) * map->GetAmountOfBlocks());
 	}
 
 	void ColorPass::UpdateSpace()
 	{
-		ubo.perScene.buffer->Update(&game->camera.GetProjectionViewMatrix());
+		ubo.perScene.buffer->Update(&camera->GetProjectionViewMatrix());
 	}
 	
 	VkDescriptorImageInfo& ColorPass::GetOutputDescriptorImageInfo()

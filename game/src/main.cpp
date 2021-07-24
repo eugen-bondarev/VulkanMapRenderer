@@ -1,7 +1,5 @@
 #include "main.h"
 
-#include "renderer/world/map/map_renderer.h"
-
 #include <future>
 
 #include "ui/ui.h"
@@ -89,8 +87,10 @@ void NaturaForge::Init()
 
 	InitCommonResources();
 
-	mapRenderer = new MapRenderer(common.descriptorPool, game);	
-	mapRenderer->FillCommandBuffers();
+	game->mapRenderer->Init(game->map, &game->camera, common.descriptorPool);
+
+	// mapRenderer = new MapRenderer(common.descriptorPool, game);	
+	game->mapRenderer->FillCommandBuffers();
 
 	InitImGui();
 }
@@ -103,7 +103,7 @@ void NaturaForge::UpdateMap()
 		if (game->map->lastVisibleChunks.start != game->map->visibleChunks.start || game->map->lastVisibleChunks.end != game->map->visibleChunks.end)
 		{
 			game->map->PopulateBlocks();
-			mapRenderer->Update();
+			game->mapRenderer->Update();
 
 			game->map->lastVisibleChunks = game->map->visibleChunks;
 		}
@@ -135,7 +135,7 @@ void NaturaForge::UpdateProjectionViewMatrix()
 
 	if (game->camera.GetEvents() & CameraEvents_PositionChanged)
 	{
-		mapRenderer->UpdateSpace();
+		game->mapRenderer->UpdateSpace();
 	}
 }
 
@@ -231,7 +231,7 @@ void NaturaForge::Update()
 		ImGui::ShowDemoWindow();
 	});
 	
-	mapRenderer->Render(frameManager->GetCurrentFrame());
+	game->mapRenderer->Render(frameManager->GetCurrentFrame());
 	FillImGuiCommandBuffers();
 	
 	Present();
@@ -262,7 +262,7 @@ void NaturaForge::Shutdown()
 
 	delete common.descriptorPool;
 
-	delete mapRenderer;
+	// delete game->MAP_RENDERER;
 
 	delete frameManager;
 }

@@ -1,10 +1,5 @@
 #include "map.h"
 
-#include "FastNoiseLite/FastNoiseLite.h"
-
-#include "renderer/atlas/texture_atlas.h"
-#include "renderer/world/map/tiles.h"
-
 #include <future>
 #include <execution>
 
@@ -13,6 +8,15 @@ struct BlockRepresentation
 	BlockType type;
 	glm::vec2 tile;
 };
+
+struct Settings
+{
+	float size0 = 0.3f;
+	float size1 = 0.001f;
+	float size2 = 0.1f;
+	float bias0 = 0.0f;
+	float bias1 = 0.0f;
+} static settings;
 
 BlockType WhatBlockType(float noise_value, TilePos tile_pos)
 {

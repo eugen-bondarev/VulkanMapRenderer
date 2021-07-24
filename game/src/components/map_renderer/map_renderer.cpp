@@ -2,8 +2,8 @@
 
 #include <engine/engine.h>
 
-#include "tiles.h"
-#include "../../atlas/texture_atlas.h"
+#include "renderer/world/map/tiles.h"
+#include "renderer/atlas/texture_atlas.h"
 
 #include <future>
 #include <execution>
@@ -12,11 +12,17 @@
 
 using namespace Engine;
 
-MapRenderer* mapRenderer;
-
-MapRenderer::MapRenderer(Vk::DescriptorPool* descriptor_pool, const std::shared_ptr<Game>& game) : game { game }
+MapRenderer::MapRenderer()
 {
-	colorPass = new Offscreen::ColorPass(game, descriptor_pool);
+
+}
+
+void MapRenderer::Init(Map* map, Camera* camera, Vk::DescriptorPool* descriptor_pool)
+{
+	this->map = map;
+	this->camera = camera;
+
+	colorPass = new Offscreen::ColorPass(map, camera, descriptor_pool);
 	composition = new Composition(descriptor_pool, colorPass->GetOutputDescriptorImageInfo());
 	
 	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
@@ -50,7 +56,7 @@ void MapRenderer::Update()
 {
 	std::vector<glm::vec4> blocks_to_render;
 	std::vector<glm::vec2> lights_to_render;
-	GetRenderData(game->map.get(), game->camera.GetPosition(), blocks_to_render, lights_to_render);
+	GetRenderData(map, camera->GetPosition(), blocks_to_render, lights_to_render);
 	colorPass->UpdateBlocks(blocks_to_render);
 }
 
