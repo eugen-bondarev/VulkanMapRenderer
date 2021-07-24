@@ -2,6 +2,8 @@
 
 #include "world/map/map.h"
 #include "ecs/camera.h"
+	
+#include "../ecs/ecs.h"
 
 class Game
 {

@@ -116,6 +116,9 @@ void Map::Async_PopulateBlocks(int start, int end)
 					block_position.y = block_in_grid.y * BLOCK_SIZE;
 					block_indices.y = (chunk.y - visibleChunks.start.y) * static_cast<int>(CHUNK_SIZE) + block_in_chunk.y;
 
+					// block_indices.x = std::min<int>(block_indices.x, blocks.size());
+					// block_indices.y = std::min<int>(block_indices.y, blocks[0].size());
+
 					if (block_position.y > horizon + height_in_this_area * height_noise_at_x)
 					{
 						float noise_value = noise.GetNoise(block_position.x * settings.size0, block_position.y * settings.size0) * 0.5f + 0.5f;
@@ -176,4 +179,34 @@ int Map::GetAmountOfBlocks() const
 Blocks_t& Map::GetBlocks()
 {
 	return blocks;
+}
+
+bool Map::WithinTopBoundsX(int x) const
+{
+	return x < blocks.size();
+}
+
+bool Map::WithinTopBoundsY(int y) const
+{
+	return y < blocks[0].size();
+}
+
+bool Map::WithinTopBounds(glm::vec2 indices) const
+{
+	return WithinTopBoundsX(indices.x) && WithinTopBoundsY(indices.y);
+}
+
+bool Map::WithinBottomBoundsX(int x) const
+{
+	return x >= 0;
+}
+
+bool Map::WithinBottomBoundsY(int y) const
+{
+	return y >= 0;
+}
+
+bool Map::WithinBottomBounds(glm::vec2 indices) const
+{
+	return WithinBottomBoundsX(indices.x) && WithinBottomBoundsY(indices.y);
 }

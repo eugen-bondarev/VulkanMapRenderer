@@ -26,6 +26,16 @@ namespace Engine
 				memcpy(&result[a.size()], b.data(), b.size() * sizeof(T));
 				return result;
 			}
+
+			template <typename T>
+			T& RemoveAt(std::vector<T>& vector, size_t index)
+			{
+				typename std::vector<T>::iterator it = std::begin(vector);
+				std::advance(it, index);
+				vector.erase(it);
+
+				return *it;
+			}
 		}
 	}
 }

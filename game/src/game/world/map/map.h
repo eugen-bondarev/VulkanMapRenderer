@@ -49,6 +49,14 @@ public:
 
 	Blocks_t& GetBlocks();
 	int GetAmountOfBlocks() const;
+
+	bool WithinTopBoundsX(int x) const;
+	bool WithinTopBoundsY(int y) const;
+	bool WithinTopBounds(glm::vec2 indices) const;
+
+	bool WithinBottomBoundsX(int x) const;
+	bool WithinBottomBoundsY(int y) const;
+	bool WithinBottomBounds(glm::vec2 indices) const;
 	
 private:
 	Blocks_t blocks;

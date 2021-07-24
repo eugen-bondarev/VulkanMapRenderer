@@ -4,6 +4,8 @@
 
 #include <future>
 
+#include "ui/ui.h"
+
 void NaturaForge::InitCommonResources()
 {
 	common.descriptorPool = new Vk::DescriptorPool({		
@@ -91,8 +93,6 @@ void NaturaForge::Init()
 	mapRenderer->FillCommandBuffers();
 
 	InitImGui();
-
-	// userTextureID = ImGui_ImplVulkan_AddTexture(Offscreen::offscreen->block.tileMap->GetImageView()->GetDescriptor().sampler, Offscreen::offscreen->block.tileMap->GetImageView()->GetDescriptor().imageView, Offscreen::offscreen->block.tileMap->GetImageView()->GetDescriptor().imageLayout);
 }
 
 void NaturaForge::UpdateMap()
@@ -165,17 +165,14 @@ void NaturaForge::FillImGuiCommandBuffers()
 	VkSemaphore* wait = &current_frame->GetRenderFinishedSemaphore();
 	VkSemaphore* signal = &current_frame->GetImGuiRenderFinishedSemaphore();
 	
-	// std::future<void> a = std::async(std::launch::async, [&]()
-	// {
-		pool->Reset();
-		cmd->Begin();
-			cmd->BeginRenderPass(imgui.renderPass, framebuffer);
-				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->GetVkCommandBuffer());
-			cmd->EndRenderPass();
-		cmd->End();
+	pool->Reset();
+	cmd->Begin();
+		cmd->BeginRenderPass(imgui.renderPass, framebuffer);
+			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->GetVkCommandBuffer());
+		cmd->EndRenderPass();
+	cmd->End();
 
-		cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal);
-	// });
+	cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal);
 }
 
 void NaturaForge::RenderUI()
@@ -183,6 +180,9 @@ void NaturaForge::RenderUI()
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+
+	UI::ExecuteStack();
+	UI::ClearStack();
 
 	ImGui::Begin("Info");
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
@@ -222,24 +222,21 @@ void NaturaForge::Update()
 
 	RenderUI();
 	
+	UI::AddToStack([&]()
+	{
+		ImGui::Begin("Just my window..");
+			ImGui::Button("Press me");
+		ImGui::End();
+
+		ImGui::ShowDemoWindow();
+	});
+	
 	mapRenderer->Render(frameManager->GetCurrentFrame());
 	FillImGuiCommandBuffers();
 	
 	Present();
 	
 	frameManager->NextFrame();
-
-	// static float exit_timer = 0;
-	// static float exit_after = 5.0f;
-
-	// exit_timer += Time::GetDelta();
-
-	// if (exit_timer >= exit_after)
-	// {
-	// 	VT_VAR_OUT(Time::GetAverageFPS());
-
-	// 	glfwSetWindowShouldClose(window->GetGLFWWindow(), 1);
-	// }
 }
 
 void NaturaForge::ShutdownImGui()

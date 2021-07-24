@@ -104,9 +104,8 @@ void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec
 		{
 			if (blocks[x][y].type == BlockType::Empty)
 			{
-				// glm::vec2 last_light = light_indices[light_indices.size() - 1];
-
- 				if (blocks[x][y + 1].type != BlockType::Empty || blocks[x][y - 1].type != BlockType::Empty)
+ 				if ((y + 1 < blocks[0].size() && blocks[x][y + 1].type != BlockType::Empty) || 
+				 	(y - 1 >= 0 && blocks[x][y - 1].type != BlockType::Empty))
 				{
 					if (light_indices.size() == 0 || dist1(glm::vec2(x, y), light_indices))
 					{
