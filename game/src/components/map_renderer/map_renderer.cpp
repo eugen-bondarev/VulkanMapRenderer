@@ -2,8 +2,8 @@
 
 #include <engine/engine.h>
 
-#include "renderer/world/map/tiles.h"
 #include "renderer/atlas/texture_atlas.h"
+#include "tiles.h"
 
 #include <future>
 #include <execution>
@@ -39,7 +39,7 @@ MapRenderer::~MapRenderer()
 }
 
 void MapRenderer::FillCommandBuffers()
-{	
+{
 	for (int i = 0; i < commandBuffers.size(); i++)
 	{
 		Vk::CommandBuffer* cmd = commandBuffers[i];

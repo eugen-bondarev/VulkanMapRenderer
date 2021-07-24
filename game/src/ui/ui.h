@@ -2,6 +2,8 @@
 
 #include <functional>
 
+#include "imgui/imgui.h"
+
 namespace UI
 {
 	void ClearStack();

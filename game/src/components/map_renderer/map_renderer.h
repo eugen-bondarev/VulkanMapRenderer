@@ -5,8 +5,8 @@
 #include "../map/map.h"
 
 #include "renderer/atlas/tile_map.h"
-#include "renderer/world/map/color_pass.h"
-#include "renderer/world/map/composition.h"
+#include "color_pass.h"
+#include "composition.h"
 
 class MapRenderer : public Component
 {

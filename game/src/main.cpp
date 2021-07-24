@@ -81,7 +81,7 @@ void NaturaForge::Init()
 {
 	game = std::make_shared<Game>();
 
-	frameManager = new Vk::FrameManager(2);
+	frameManager = new Vk::FrameManager();
 
 	imagesInFlight.resize(Vk::Global::swapChain->GetImageViews().size());
 
@@ -221,15 +221,6 @@ void NaturaForge::Update()
 	UpdateMap();
 
 	RenderUI();
-	
-	UI::AddToStack([&]()
-	{
-		ImGui::Begin("Just my window..");
-			ImGui::Button("Press me");
-		ImGui::End();
-
-		ImGui::ShowDemoWindow();
-	});
 	
 	game->mapRenderer->Render(frameManager->GetCurrentFrame());
 	FillImGuiCommandBuffers();
