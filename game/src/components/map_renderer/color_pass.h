@@ -6,7 +6,7 @@
 #include <engine/engine.h>
 
 #include "components/map/map.h"
-#include "game/ecs/camera.h"
+#include "components/camera/camera.h"
 
 struct UBOScene
 {

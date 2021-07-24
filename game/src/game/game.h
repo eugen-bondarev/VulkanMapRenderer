@@ -1,10 +1,9 @@
 #pragma once
 
-#include "ecs/camera.h"
-	
-#include "../ecs/ecs.h"
-#include "../components/map/map.h"
-#include "../components/map_renderer/map_renderer.h"
+#include "ecs/ecs.h"
+#include "components/map/map.h"
+#include "components/map_renderer/map_renderer.h"
+#include "components/camera/camera.h"	
 
 class Game
 {
@@ -16,7 +15,7 @@ public:
 	Map* map;
 	MapRenderer* mapRenderer;
 
-	Camera camera;
+	Camera* camera;
 
 private:
 	Game(const Game&) = delete;

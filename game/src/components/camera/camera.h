@@ -4,6 +4,8 @@
 
 #include <engine/common.h>
 
+#include "ecs/ecs.h"
+
 enum CameraEvents_
 {
 	CameraEvents_None = 0,
@@ -12,7 +14,7 @@ enum CameraEvents_
 };
 ENUM_USE_FOR_FLAGS(CameraEvents_)
 
-class Camera : public ITransform
+class Camera : public ITransform, public Component
 {
 public:
 	Camera();

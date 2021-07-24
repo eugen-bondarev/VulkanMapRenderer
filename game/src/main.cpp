@@ -87,7 +87,7 @@ void NaturaForge::Init()
 
 	InitCommonResources();
 
-	game->mapRenderer->Init(game->map, &game->camera, common.descriptorPool);
+	game->mapRenderer->Init(game->map, game->camera, common.descriptorPool);
 
 	// mapRenderer = new MapRenderer(common.descriptorPool, game);	
 	game->mapRenderer->FillCommandBuffers();
@@ -97,9 +97,9 @@ void NaturaForge::Init()
 
 void NaturaForge::UpdateMap()
 {
-	if (game->camera.GetEvents() & CameraEvents_PositionChanged)
+	if (game->camera->GetEvents() & CameraEvents_PositionChanged)
 	{
-		game->map->CalculateVisibleChunks(game->camera.GetPosition());
+		game->map->CalculateVisibleChunks(game->camera->GetPosition());
 		if (game->map->lastVisibleChunks.start != game->map->visibleChunks.start || game->map->lastVisibleChunks.end != game->map->visibleChunks.end)
 		{
 			game->map->PopulateBlocks();
@@ -118,22 +118,22 @@ void NaturaForge::UpdateProjectionViewMatrix()
 
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_W))
 	{
-		game->camera.AddPosition(glm::vec2(0, -1) * Time::GetDelta() * speed);
+		game->camera->AddPosition(glm::vec2(0, -1) * Time::GetDelta() * speed);
 	}
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_S))
 	{
-		game->camera.AddPosition(glm::vec2(0, 1) * Time::GetDelta() * speed);
+		game->camera->AddPosition(glm::vec2(0, 1) * Time::GetDelta() * speed);
 	}
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_D))
 	{
-		game->camera.AddPosition(glm::vec2(1, 0) * Time::GetDelta() * speed);
+		game->camera->AddPosition(glm::vec2(1, 0) * Time::GetDelta() * speed);
 	}
 	if (glfwGetKey(window->GetGLFWWindow(), GLFW_KEY_A))
 	{
-		game->camera.AddPosition(glm::vec2(-1, 0) * Time::GetDelta() * speed);
+		game->camera->AddPosition(glm::vec2(-1, 0) * Time::GetDelta() * speed);
 	}
 
-	if (game->camera.GetEvents() & CameraEvents_PositionChanged)
+	if (game->camera->GetEvents() & CameraEvents_PositionChanged)
 	{
 		game->mapRenderer->UpdateSpace();
 	}
@@ -216,7 +216,7 @@ void NaturaForge::Update()
 	imagesInFlight[image_index] = current_frame->GetInFlightFence();
 
 	// Game logic
-	game->camera.CheckPositionChange();
+	game->camera->CheckPositionChange();
 	UpdateProjectionViewMatrix();
 	UpdateMap();
 

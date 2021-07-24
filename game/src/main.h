@@ -1,6 +1,6 @@
 #include <engine/engine.h>
 
-#include "game/ecs/camera.h"
+#include "components/camera/camera.h"
 #include "game/game.h"
 
 #include "renderer/atlas/texture_atlas.h"

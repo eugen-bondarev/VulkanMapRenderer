@@ -6,8 +6,9 @@ Game::Game()
 
 	mapEntity = new Entity();
 
-	map = AddComponent<::Map>(mapEntity);
-	mapRenderer = AddComponent<::MapRenderer>(mapEntity);
+	map = AddComponent<Map>(mapEntity);
+	mapRenderer = AddComponent<MapRenderer>(mapEntity);
+	camera = AddComponent<Camera>(mapEntity);
 }
 
 Game::~Game()
