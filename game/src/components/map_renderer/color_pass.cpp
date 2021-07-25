@@ -23,9 +23,12 @@ namespace Offscreen
 		Vk::AttributeDescriptions attribute_descriptors = Util::Vector::Merge(Vk::Vertex::GetAttributeDescriptions(), Vk::PerInstanceVertex::GetAttributeDescriptions());
 		std::vector<VkDescriptorSetLayout> descriptor_set_layouts = { descriptorSetLayout->GetVkDescriptorSetLayout() };
 
+		// glm::vec2 color_pass_size = window->GetSize() / 2.0f;
+		glm::vec2 color_pass_size = window->GetSize();
+
 		pipeline = std::make_shared<Vk::Pipeline>(
 			vs_code.GetContent(), fs_code.GetContent(), 
-			Util::Math::ExtentToVec2(Vk::Global::swapChain->GetExtent()),
+			color_pass_size,
 			attachments,
 			binding_descriptors, 
 			attribute_descriptors,
@@ -33,7 +36,7 @@ namespace Offscreen
 		);
 
 		texture = std::make_shared<Vk::Texture2D>(
-			window->GetSize(), 
+			color_pass_size, 
 			4, 
 			nullptr, 
 			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
@@ -42,7 +45,7 @@ namespace Offscreen
 		framebuffer = std::make_shared<Vk::Framebuffer>(
 			texture->GetImageView()->GetVkImageView(), 
 			pipeline->GetRenderPass()->GetVkRenderPass(), 
-			window->GetSize()
+			color_pass_size
 		);
 
 		// Creating a uniform buffer (Scene scope)

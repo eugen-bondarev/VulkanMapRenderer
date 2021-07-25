@@ -3,7 +3,9 @@
 #include "ecs/ecs.h"
 #include "components/map/map.h"
 #include "components/map_renderer/map_renderer.h"
-#include "components/camera/camera.h"	
+#include "components/camera/camera.h"
+
+#include "components/ui_renderer/ui_renderer.h"
 
 class Game
 {
@@ -16,6 +18,9 @@ public:
 	MapRenderer* mapRenderer;
 
 	Camera* camera;
+
+	Entity* uiEntity;
+	UIRenderer* uiRenderer;
 
 private:
 	Game(const Game&) = delete;

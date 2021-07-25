@@ -20,5 +20,10 @@ namespace Engine
 			DescriptorPool(const DescriptorPool&) = delete;
 			DescriptorPool& operator=(const DescriptorPool&) = delete;
 		};
+
+		namespace Global
+		{
+			extern DescriptorPool* descriptorPool;
+		}
 	}
 }

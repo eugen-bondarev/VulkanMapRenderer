@@ -6,6 +6,7 @@
 #include "swap_chain/swap_chain.h"
 #include "commands/command_pool.h"
 #include "image/sampler.h"
+#include "descriptors/descriptor_pool.h"
 
 namespace Engine
 {

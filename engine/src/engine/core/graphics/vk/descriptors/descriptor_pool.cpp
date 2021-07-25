@@ -6,6 +6,11 @@ namespace Engine
 {
 	namespace Vk
 	{
+		namespace Global
+		{			
+			DescriptorPool* descriptorPool;
+		}
+
 		DescriptorPool::DescriptorPool(const std::vector<VkDescriptorPoolSize>& pool_sizes)
 		{
 			// VkDescriptorPoolSize pool_sizes[] =

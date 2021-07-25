@@ -7,23 +7,8 @@
 
 #include "factory.h"
 
-struct Entity;
-struct Component;
-
-struct Component
-{
-	Entity* entity;
-
-	Component()
-	{
-
-	}
-
-	virtual ~Component()
-	{
-
-	}
-};
+#include "component.h"
+#include "collections.h"
 
 struct Entity
 {
@@ -46,11 +31,12 @@ T* AddComponent(Entity* entity, Args&&... args)
 {
 	T* component = new T(std::forward<Args>(args)...);
 	entity->components.push_back(component);
+	
+	Collections::AddToCollection(component);
+
 	component->entity = entity;
 	return component;
 }
-
-// Component* AddComponent(Entity* entity, const std::string& name);
 
 template <typename T>
 T* GetComponent(Entity* entity)
@@ -60,4 +46,35 @@ T* GetComponent(Entity* entity)
 			return component;
 
 	return nullptr;
+}
+
+template <typename T>
+void RemoveComponent(Entity* entity)
+{
+	T* component = GetComponent<T>(entity);
+
+	if (component)
+	{
+		for (int i = 0; i < entity->components.size(); i++)
+		{
+			if (entity->components[i] == component)
+			{
+				// Removing from entity's component list
+				{
+					Engine::Util::Vector::RemoveAt(entity->components, i);
+				}
+
+				// Removing from a collection (if there is one containing it)
+				{
+					Collections::RemoveFromCollection(component);
+				}
+
+				{
+					delete component;
+				}
+				
+				break;
+			}
+		}
+	}
 }

@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include <iostream>
+
 namespace Engine
 {
 	namespace Util
@@ -30,11 +32,12 @@ namespace Engine
 			template <typename T>
 			T& RemoveAt(std::vector<T>& vector, size_t index)
 			{
+				T& element = vector[index];
 				typename std::vector<T>::iterator it = std::begin(vector);
 				std::advance(it, index);
 				vector.erase(it);
 
-				return *it;
+				return element;
 			}
 		}
 	}

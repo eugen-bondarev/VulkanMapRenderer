@@ -29,6 +29,14 @@ void MapRenderer::Init(Map* map, Camera* camera, Vk::DescriptorPool* descriptor_
 		colorPass->GetOutputDescriptorImageInfo(),
 		lightPass->GetOutputDescriptorImageInfo()
 	);
+
+	delete composition;
+
+	composition = new Composition(
+		descriptor_pool, 
+		colorPass->GetOutputDescriptorImageInfo(),
+		lightPass->GetOutputDescriptorImageInfo()
+	);
 	
 	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
 	{
@@ -56,22 +64,30 @@ void MapRenderer::Init(Map* map, Camera* camera, Vk::DescriptorPool* descriptor_
 				composition->WriteToCmd(cmd, framebuffer);
 			cmd->End();
 	}
+
+	initialized = true;
 }
 
 MapRenderer::~MapRenderer()
 {
-	delete composition;
-	delete lightPass;
-	delete colorPass;
-
-	for (int i = 0; i < commandBuffers.size(); i++)
+	if (initialized)
 	{
-		delete commandBuffers[i];
-		delete commandPools[i];
+		delete composition;
+
+		delete lightPass;
+
+		delete colorPass;
+
+		for (int i = 0; i < commandBuffers.size(); i++)
+		{
+			delete commandBuffers[i];
+
+			delete commandPools[i];
+		}
 	}
 }
 
-void MapRenderer::Update()
+void MapRenderer::UpdateRenderData()
 {
 	walls_to_render.clear();
 	blocks_to_render.clear();
@@ -220,6 +236,22 @@ void MapRenderer::GetRenderData(Map* map)
 #else
 	Async_GetRenderData(map, walls_to_render, blocks_to_render, lights_to_render, blocks_tile_map, 0, blocks.size());
 #endif
+}
+
+void MapRenderer::Update()
+{
+	if (camera->GetEvents() & CameraEvents_PositionChanged)
+	{
+		map->CalculateVisibleChunks(camera->GetPosition());
+		UpdateCmdBuffers();
+		if (map->lastVisibleChunks.start != map->visibleChunks.start || map->lastVisibleChunks.end != map->visibleChunks.end)
+		{
+			map->PopulateBlocks();
+			UpdateRenderData();
+
+			map->lastVisibleChunks = map->visibleChunks;
+		}
+	}
 }
 
 void MapRenderer::Render(Vk::Frame* frame)

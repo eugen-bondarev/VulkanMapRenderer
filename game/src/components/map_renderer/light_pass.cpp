@@ -23,7 +23,7 @@ namespace Offscreen
 		Vk::AttributeDescriptions attribute_descriptors = Util::Vector::Merge(Vk::Vertex::GetAttributeDescriptions(), Vk::PerInstanceVertex2D::GetAttributeDescriptions());
 		std::vector<VkDescriptorSetLayout> descriptor_set_layouts = { descriptorSetLayout->GetVkDescriptorSetLayout() };
 
-		glm::vec2 light_pass_size = window->GetSize() / 16.0f;
+		glm::vec2 light_pass_size = window->GetSize() / 10.0f;
 
 		pipeline = std::make_shared<Vk::Pipeline>(
 			vs_code.GetContent(), fs_code.GetContent(),

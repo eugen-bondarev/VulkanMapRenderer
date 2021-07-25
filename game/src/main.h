@@ -22,34 +22,14 @@ public:
 private:
 	std::shared_ptr<Game> game;
 
-	void UpdateMap();
 	void UpdateProjectionViewMatrix();
 
-	void RenderUI();
 	void Render(Vk::CommandBuffer* cmd);
 	
 	void Present();
 
 	Vk::FrameManager* frameManager;
 	std::vector<VkFence> imagesInFlight;
-
-	struct
-	{
-		Vk::DescriptorPool* descriptorPool;
-	} common;
-
-	void InitCommonResources();
-
-	void InitImGui();
-	void ShutdownImGui();
-
-	struct
-	{
-		Vk::RenderPass* renderPass;
-		std::vector<Vk::CommandPool*> commandPools;
-		std::vector<Vk::CommandBuffer*> commandBuffers;
-	} imgui;
-	void FillImGuiCommandBuffers();	
 };
 
 App* ::Engine::GetApp()

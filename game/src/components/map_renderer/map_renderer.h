@@ -9,19 +9,22 @@
 #include "light_pass.h"
 #include "composition.h"
 
-class MapRenderer : public Component
+#include "ecs/collections.h"
+
+class MapRenderer : public Component, public Collections::IRenderable, public Collections::IOnUpdate
 {
 public:
 	MapRenderer();
 	~MapRenderer();
 	void Init(Map* map, Camera* camera, Engine::Vk::DescriptorPool* descriptor_pool);
 
-	void Update();
+	void UpdateRenderData();
 	void UpdateSpace();
 
 	void GetRenderData(Map* map);
 
-	void Render(Engine::Vk::Frame* frame);
+	virtual void Update() override;
+	virtual void Render(Engine::Vk::Frame* frame) override;
 
 	std::vector<Engine::Vk::CommandBuffer*>& GetCommandBuffers();
 	Engine::Vk::CommandPool* GetCurrentCmdPool();
@@ -33,6 +36,7 @@ private:
 	Map* map;
 	Camera* camera;
 
+	bool initialized { false };
 	bool updateCmdBuffers { true };
 	
 	std::vector<glm::vec4> blocks_to_render;
