@@ -37,9 +37,10 @@ void MapRenderer::Init(Map* map, Camera* camera, Vk::DescriptorPool* descriptor_
 		commandPools.push_back(pool);
 	}
 
-	GetRenderData(map, camera->GetPosition(), blocks_to_render, lights_to_render);
+	GetRenderData(map);
 
 	colorPass->UpdateBlocks(blocks_to_render);
+	colorPass->UpdateWalls(walls_to_render);
 	lightPass->UpdateBlocks(lights_to_render);
 
 	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
@@ -50,7 +51,7 @@ void MapRenderer::Init(Map* map, Camera* camera, Vk::DescriptorPool* descriptor_
 
 		pool->Reset();
 			cmd->Begin();
-				colorPass->WriteToCmd(cmd, blocks_to_render.size());
+				colorPass->WriteToCmd(cmd, walls_to_render.size(), blocks_to_render.size());
 				lightPass->WriteToCmd(cmd, lights_to_render.size());
 				composition->WriteToCmd(cmd, framebuffer);
 			cmd->End();
@@ -70,28 +71,15 @@ MapRenderer::~MapRenderer()
 	}
 }
 
-void MapRenderer::FillCommandBuffers()
-{
-	// for (int i = 0; i < commandBuffers.size(); i++)
-	// {
-	// 	Vk::CommandBuffer* cmd = commandBuffers[i];
-	// 	Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetFramebuffers()[i];
-
-	// 	cmd->Begin();
-	// 		colorPass->WriteToCmd(cmd);
-	// 		lightPass->WriteToCmd(cmd);
-	// 		composition->WriteToCmd(cmd, framebuffer);
-	// 	cmd->End();
-	// }
-}
-
 void MapRenderer::Update()
 {
+	walls_to_render.clear();
 	blocks_to_render.clear();
 	lights_to_render.clear();
 
-	GetRenderData(map, camera->GetPosition(), blocks_to_render, lights_to_render);
+	GetRenderData(map);
 
+	colorPass->UpdateWalls(walls_to_render);
 	colorPass->UpdateBlocks(blocks_to_render);	
 	lightPass->UpdateBlocks(lights_to_render);
 }
@@ -102,11 +90,11 @@ void MapRenderer::UpdateSpace()
 	lightPass->UpdateSpace();
 }
 
-void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& blocks_to_render, std::vector<glm::vec2>& lights_to_render, BlocksTileMap* tile_map, int start, int end)
+void Async_GetRenderData(Map* map, std::vector<glm::vec4>& walls_to_render, std::vector<glm::vec4>& blocks_to_render, std::vector<glm::vec2>& lights_to_render, BlocksTileMap* tile_map, int start, int end)
 {
 	const auto& blocks = map->GetBlocks();
+	const auto& walls = map->GetWalls();
 
-	BlockType last_type = BlockType::Empty;
 	TileFunction function;
 	glm::vec2 base_tile;
 
@@ -116,13 +104,25 @@ void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec
 		{
 			if (blocks[x][y].type == BlockType::Empty)
 			{
- 				if ((y + 1 < blocks[0].size() && blocks[x][y + 1].type != BlockType::Empty) || (y - 1 >= 0 && blocks[x][y - 1].type != BlockType::Empty))
+				if (walls[x][y].type != WallType::Empty)
 				{
-					lights_to_render.push_back(blocks[x][y].worldPosition);
+					if (y - 6 >= 0 && blocks[x][y - 6].type == BlockType::Empty && walls[x][y - 6].type == WallType::Empty)
+					{
+						lights_to_render.push_back(blocks[x][y].worldPosition);
+					}				
+				}
+				else
+				{
+					if (y > 0 && (blocks[x][y + 1].type != BlockType::Empty || walls[x][y + 1].type != BlockType::Empty))
+					{
+						lights_to_render.push_back(blocks[x][y].worldPosition);
+					}
 				}
 			}
 		}
 	}
+
+	static glm::vec2 offset = {-4.0f, 4.0f};
 
 	for (int x = start; x < end; x++)
 	{
@@ -130,17 +130,40 @@ void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec
 		{
 			if (blocks[x][y].type != BlockType::Empty)
 			{
-				if (blocks[x][y].type != last_type)
-				{
-					function = PickTileFunction(blocks[x][y].type);
-					base_tile = tile_map->Get(blocks[x][y].type);
-				}
+				function = PickTileFunction(blocks[x][y].type);
+				base_tile = tile_map->Get(blocks[x][y].type);
 
 				const glm::vec2 block_texture_tile = base_tile + function(blocks, x, y);
-
 				blocks_to_render.emplace_back(blocks[x][y].worldPosition, block_texture_tile);
 
-				last_type = blocks[x][y].type;
+				if (x + 1 < blocks.size() && x > 0 && y > 0 && y + 1 < blocks[0].size())
+				{
+					if (walls[x][y].type != WallType::Empty)
+					{
+						if (
+							blocks[x][y].type != blocks[x - 1][y].type ||
+							blocks[x][y].type != blocks[x][y + 1].type ||
+							blocks[x][y].type != blocks[x - 1][y + 1].type
+						)
+						{
+							function = PickTileFunction(walls[x][y].type);
+							base_tile = tile_map->Get(walls[x][y].type == WallType::Grass ? WallType::Dirt : walls[x][y].type);							
+							const glm::vec2 wall_texture_tile = base_tile + PickRightAngularWall(walls, x, y) + glm::vec2(3, 0);
+							walls_to_render.emplace_back(walls[x][y].worldPosition + offset, wall_texture_tile);
+						}
+					}
+				}				
+			}
+			else
+			{
+				if (walls[x][y].type != WallType::Empty)
+				{
+					function = PickTileFunction(walls[x][y].type);
+					base_tile = tile_map->Get(walls[x][y].type == WallType::Grass ? WallType::Dirt : walls[x][y].type);
+
+					const glm::vec2 wall_texture_tile = base_tile + PickRightAngularWall(walls, x, y) + glm::vec2(3, 0);
+					walls_to_render.emplace_back(walls[x][y].worldPosition + offset, wall_texture_tile);
+				}
 			}
 		}
 	}
@@ -150,14 +173,16 @@ void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec
 * Note: 
 *	Parallelism doesn't work well here
 */
-void MapRenderer::GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& blocks_to_render, std::vector<glm::vec2>& lights_to_render)
+void MapRenderer::GetRenderData(Map* map)
 {
 	VT_PROFILER_SCOPE();
 
 	BlocksTileMap* blocks_tile_map = TextureAtlas::Get<BlocksTileMap>(TextureAtlasType::Map);
 
+	const auto& walls = map->GetWalls();
 	const auto& blocks = map->GetBlocks();
 
+	walls_to_render.reserve(walls.size() * walls[0].size());
 	blocks_to_render.reserve(blocks.size() * blocks[0].size());
 	lights_to_render.reserve(300);
 
@@ -189,18 +214,16 @@ void MapRenderer::GetRenderData(Map* map, glm::vec2 view_position, std::vector<g
 		intervals.end(),
 		[&](glm::vec2& interval) 
 		{
-			Async_GetRenderData(map, view_position, blocks_to_render, lights_to_render, blocks_tile_map, interval.x, interval.y);
+			Async_GetRenderData(map, walls_to_render, blocks_to_render, lights_to_render, blocks_tile_map, interval.x, interval.y);
 		}
 	);
 #else
-	Async_GetRenderData(map, view_position, blocks_to_render, lights_to_render, blocks_tile_map, 0, blocks.size());
+	Async_GetRenderData(map, walls_to_render, blocks_to_render, lights_to_render, blocks_tile_map, 0, blocks.size());
 #endif
 }
 
 void MapRenderer::Render(Vk::Frame* frame)
-{	
-	VT_PROFILER_SCOPE();
-
+{
 	VkSemaphore* wait = &frame->GetImageAvailableSemaphore();
 	VkSemaphore* signal = &frame->GetRenderFinishedSemaphore();
 	VkFence fence = frame->GetInFlightFence();
@@ -208,18 +231,22 @@ void MapRenderer::Render(Vk::Frame* frame)
 
 	if (updateCmdBuffers)
 	{
+		VT_PROFILER_NAMED_SCOPE("Overwrite cmd buffers");
+
 		Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetCurrentScreenFramebuffer();
 		Vk::CommandPool* pool = GetCurrentCmdPool();
 
 		pool->Reset();
 			cmd->Begin();
-				colorPass->WriteToCmd(cmd, blocks_to_render.size());
+				colorPass->WriteToCmd(cmd, walls_to_render.size(), blocks_to_render.size());
 				lightPass->WriteToCmd(cmd, lights_to_render.size());
 				composition->WriteToCmd(cmd, framebuffer);
 			cmd->End();
 
 		updateCmdBuffers = false;
 	}
+
+	VT_PROFILER_SCOPE();
 
 	vkResetFences(Vk::Global::device->GetVkDevice(), 1, &fence);
 	cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal, fence);

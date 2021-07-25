@@ -41,6 +41,7 @@ public:
 	void Async_PopulateBlocks(int start, int end);
 
 	Blocks_t& GetBlocks();
+	Walls_t& GetWalls();
 	int GetAmountOfBlocks() const;
 
 	bool WithinTopBoundsX(int x) const;
@@ -53,7 +54,7 @@ public:
 	
 private:
 	Blocks_t blocks;
-	std::vector<glm::vec4> blocksForRendering;
+	Walls_t walls;
 
 	FastNoiseLite noise;
 

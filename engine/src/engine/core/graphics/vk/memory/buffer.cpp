@@ -99,6 +99,14 @@ namespace Engine
 			void* mapped_data;
 			vkMapMemory(Global::device->GetVkDevice(), vkMemory, 0, size, 0, &mapped_data);
 				memcpy(mapped_data, data, size);
+
+			// VkMappedMemoryRange range;
+			// range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+			// range.memory = vkMemory;
+			// range.size = VK_WHOLE_SIZE;
+			// range.offset = 0;
+			// vkFlushMappedMemoryRanges(Global::device->GetVkDevice(), 1, &range);
+			
 			vkUnmapMemory(Global::device->GetVkDevice(), vkMemory);
 		}
 

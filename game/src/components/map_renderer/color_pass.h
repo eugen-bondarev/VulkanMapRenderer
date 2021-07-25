@@ -22,8 +22,9 @@ namespace Offscreen
 
 		VkDescriptorImageInfo& GetOutputDescriptorImageInfo();
 
-		void WriteToCmd(Engine::Vk::CommandBuffer* cmd, int instances);
+		void WriteToCmd(Engine::Vk::CommandBuffer* cmd, int instances_of_walls, int instances_of_blocks);
 		void UpdateBlocks(const std::vector<glm::vec4>& render_data);
+		void UpdateWalls(const std::vector<glm::vec4>& render_data);
 		void UpdateSpace();
 
 	private:
@@ -53,6 +54,7 @@ namespace Offscreen
 			} perScene;
 		} ubo;
 		
-		std::shared_ptr<Engine::Vk::Buffer> dynamicVertexBuffer;
+		std::shared_ptr<Engine::Vk::Buffer> blocksVertexBuffer;
+		std::shared_ptr<Engine::Vk::Buffer> wallsVertexBuffer;
 	};
 }

@@ -83,7 +83,16 @@ namespace Offscreen
 		descriptorSet->Update(offscreen_write_descriptor_sets);
 		
 		// Dynamic buffer for blocks' positions
-		dynamicVertexBuffer = std::make_shared<Vk::Buffer>(
+		blocksVertexBuffer = std::make_shared<Vk::Buffer>(
+			sizeof(glm::vec4), 
+			map->GetAmountOfBlocks(), 
+			nullptr, 
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+		);
+		
+		// Dynamic buffer for walls' positions
+		wallsVertexBuffer = std::make_shared<Vk::Buffer>(
 			sizeof(glm::vec4), 
 			map->GetAmountOfBlocks(), 
 			nullptr, 
@@ -115,21 +124,29 @@ namespace Offscreen
 		}
 	}	
 
-	void ColorPass::WriteToCmd(Engine::Vk::CommandBuffer* cmd, int instances)
+	void ColorPass::WriteToCmd(Engine::Vk::CommandBuffer* cmd, int instances_of_walls, int instances_of_blocks)
 	{
 		cmd->BeginRenderPass(pipeline->GetRenderPass(), framebuffer.get());
 			cmd->BindPipeline(pipeline.get());
-				cmd->BindVertexBuffers({ block.vertexBuffer.get(), dynamicVertexBuffer.get() }, { 0, 0 });
 				cmd->BindIndexBuffer(block.indexBuffer.get());
-					cmd->BindDescriptorSets(pipeline.get(), 1, &descriptorSet->GetVkDescriptorSet());
-					cmd->DrawIndexed(block.indexBuffer->GetAmountOfElements(), instances, 0, 0, 0);
+				cmd->BindDescriptorSets(pipeline.get(), 1, &descriptorSet->GetVkDescriptorSet());
+					cmd->BindVertexBuffers({ block.vertexBuffer.get(), wallsVertexBuffer.get() }, { 0, 0 });
+						cmd->DrawIndexed(block.indexBuffer->GetAmountOfElements(), instances_of_walls, 0, 0, 0);
+					cmd->BindVertexBuffers({ block.vertexBuffer.get(), blocksVertexBuffer.get() }, { 0, 0 });
+						cmd->DrawIndexed(block.indexBuffer->GetAmountOfElements(), instances_of_blocks, 0, 0, 0);
 		cmd->EndRenderPass();
 	}
 
 	void ColorPass::UpdateBlocks(const std::vector<glm::vec4>& render_data)
 	{
-		VT_PROFILER_NAMED_SCOPE("Update buffer");
-		dynamicVertexBuffer->Update(render_data.data(), static_cast<uint32_t>(sizeof(glm::vec4)) * render_data.size());
+		VT_PROFILER_SCOPE();
+		blocksVertexBuffer->Update(render_data.data(), static_cast<uint32_t>(sizeof(glm::vec4)) * render_data.size());
+	}
+
+	void ColorPass::UpdateWalls(const std::vector<glm::vec4>& render_data)
+	{
+		VT_PROFILER_SCOPE();
+		wallsVertexBuffer->Update(render_data.data(), static_cast<uint32_t>(sizeof(glm::vec4)) * render_data.size());
 	}
 
 	void ColorPass::UpdateSpace()

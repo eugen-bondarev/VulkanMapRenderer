@@ -19,8 +19,7 @@ public:
 	void Update();
 	void UpdateSpace();
 
-	void FillCommandBuffers();
-	void GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& blocks_to_render, std::vector<glm::vec2>& lights_to_render);
+	void GetRenderData(Map* map);
 
 	void Render(Engine::Vk::Frame* frame);
 
@@ -37,6 +36,7 @@ private:
 	bool updateCmdBuffers { true };
 	
 	std::vector<glm::vec4> blocks_to_render;
+	std::vector<glm::vec4> walls_to_render;
 	std::vector<glm::vec2> lights_to_render;
 
 	std::vector<Engine::Vk::CommandPool*> commandPools;

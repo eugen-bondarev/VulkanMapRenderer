@@ -63,7 +63,7 @@ void Map::CalculateVisibleChunks(glm::vec2 view_position)
 {
 	static glm::vec2 correction = glm::vec2(-16, 16);
 	visibleChunks.start.x = (view_position.x + correction.x - Engine::window->GetSize().x / 2.0f) / 16.0f / CHUNK_SIZE;
-	visibleChunks.end.x = visibleChunks.start.x + Engine::window->GetSize().x / (CHUNK_SIZE * BLOCK_SIZE) + 3;
+	visibleChunks.end.x = visibleChunks.start.x + Engine::window->GetSize().x / (CHUNK_SIZE * BLOCK_SIZE) + 4;
 	visibleChunks.start.y = (view_position.y + correction.y - Engine::window->GetSize().y / 2.0f) / 16.0f / CHUNK_SIZE;
 	visibleChunks.end.y = visibleChunks.start.y + Engine::window->GetSize().y / (CHUNK_SIZE * BLOCK_SIZE) + 2;
 
@@ -81,10 +81,12 @@ void Map::DetermineDimensionsInBlocks()
 	dimensions.y = (visibleChunks.end.y - visibleChunks.start.y) * CHUNK_SIZE;
 
 	blocks.resize(dimensions.x);
+	walls.resize(dimensions.x);
 
 	for (int i = 0; i < dimensions.x; i++)
 	{
 		blocks[i].resize(dimensions.y);
+		walls[i].resize(dimensions.y);
 	}
 
 	VT_VAR_OUT(dimensions.x * dimensions.y);
@@ -120,21 +122,24 @@ void Map::Async_PopulateBlocks(int start, int end)
 					block_position.y = block_in_grid.y * BLOCK_SIZE;
 					block_indices.y = (chunk.y - visibleChunks.start.y) * static_cast<int>(CHUNK_SIZE) + block_in_chunk.y;
 
-					// block_indices.x = std::min<int>(block_indices.x, blocks.size());
-					// block_indices.y = std::min<int>(block_indices.y, blocks[0].size());
-
 					if (block_position.y > horizon + height_in_this_area * height_noise_at_x)
 					{
 						float noise_value = noise.GetNoise(block_position.x * settings.size0, block_position.y * settings.size0) * 0.5f + 0.5f;
-						BlockType type = WhatBlockType(noise_value, TilePos::Foreground);
-						blocks[block_indices.x][block_indices.y].type = type;
+
+						BlockType block_type = WhatBlockType(noise_value, TilePos::Foreground);
+						WallType wall_type = WhatBlockType(noise_value, TilePos::Background);
+
+						blocks[block_indices.x][block_indices.y].type = block_type;
+						walls[block_indices.x][block_indices.y].type = wall_type;
 					}
 					else
 					{
 						blocks[block_indices.x][block_indices.y].type = BlockType::Empty;
+						walls[block_indices.x][block_indices.y].type = WallType::Empty;
 					}
 
 					blocks[block_indices.x][block_indices.y].worldPosition = block_position;
+					walls[block_indices.x][block_indices.y].worldPosition = block_position;
 				}
 			}
 		}
@@ -183,6 +188,11 @@ int Map::GetAmountOfBlocks() const
 Blocks_t& Map::GetBlocks()
 {
 	return blocks;
+}
+
+Walls_t& Map::GetWalls()
+{
+	return walls;
 }
 
 bool Map::WithinTopBoundsX(int x) const
