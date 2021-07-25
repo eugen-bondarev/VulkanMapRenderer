@@ -23,75 +23,90 @@ void MapRenderer::Init(Map* map, Camera* camera, Vk::DescriptorPool* descriptor_
 	this->camera = camera;
 
 	colorPass = new Offscreen::ColorPass(map, camera, descriptor_pool);
-	composition = new Composition(descriptor_pool, colorPass->GetOutputDescriptorImageInfo());
+	lightPass = new Offscreen::LightPass(map, camera, descriptor_pool);
+	composition = new Composition(
+		descriptor_pool, 
+		colorPass->GetOutputDescriptorImageInfo(),
+		lightPass->GetOutputDescriptorImageInfo()
+	);
 	
 	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
-		commandBuffers.push_back(new Vk::CommandBuffer(Vk::Global::commandPool));
+	{
+		Vk::CommandPool* pool = new Vk::CommandPool();
+		commandBuffers.push_back(new Vk::CommandBuffer(pool));
+		commandPools.push_back(pool);
+	}
+
+	
+	std::vector<glm::vec4> blocks_to_render;
+	std::vector<glm::vec2> lights_to_render;
+
+	GetRenderData(map, camera->GetPosition(), blocks_to_render, lights_to_render);
+
+	// colorPass->UpdateBlocks(blocks_to_render);
+	// lightPass->UpdateBlocks(lights_to_render);
+
+	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
+	{
+		Vk::CommandPool* pool = commandPools[i];
+		Vk::CommandBuffer* cmd = commandBuffers[i];
+		Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetFramebuffers()[i];
+
+		pool->Reset();
+			cmd->Begin();
+				colorPass->WriteToCmd(cmd, blocks_to_render.size());
+				lightPass->WriteToCmd(cmd, lights_to_render.size());
+				composition->WriteToCmd(cmd, framebuffer);
+			cmd->End();
+	}
 }
 
 MapRenderer::~MapRenderer()
 {
 	delete composition;
+	delete lightPass;
 	delete colorPass;
 
 	for (int i = 0; i < commandBuffers.size(); i++)
+	{
 		delete commandBuffers[i];
+		delete commandPools[i];
+	}
 }
 
 void MapRenderer::FillCommandBuffers()
 {
-	for (int i = 0; i < commandBuffers.size(); i++)
-	{
-		Vk::CommandBuffer* cmd = commandBuffers[i];
-		Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetFramebuffers()[i];
+	// for (int i = 0; i < commandBuffers.size(); i++)
+	// {
+	// 	Vk::CommandBuffer* cmd = commandBuffers[i];
+	// 	Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetFramebuffers()[i];
 
-		cmd->Begin();
-			colorPass->WriteToCmd(cmd);
-			composition->WriteToCmd(cmd, framebuffer);
-		cmd->End();
-	}
+	// 	cmd->Begin();
+	// 		colorPass->WriteToCmd(cmd);
+	// 		lightPass->WriteToCmd(cmd);
+	// 		composition->WriteToCmd(cmd, framebuffer);
+	// 	cmd->End();
+	// }
 }
 
 void MapRenderer::Update()
 {
 	std::vector<glm::vec4> blocks_to_render;
 	std::vector<glm::vec2> lights_to_render;
+
 	GetRenderData(map, camera->GetPosition(), blocks_to_render, lights_to_render);
-	colorPass->UpdateBlocks(blocks_to_render);
+
+	colorPass->UpdateBlocks(blocks_to_render);	
+	lightPass->UpdateBlocks(lights_to_render);
+
+	blocks = blocks_to_render.size();
+	lights = lights_to_render.size();
 }
 
 void MapRenderer::UpdateSpace()
 {
 	colorPass->UpdateSpace();
-}
-
-static bool BlockIsLit(glm::vec2 block_position, const std::vector<glm::vec2>& lights)
-{
-	for (int i = 0; i < lights.size(); i++)
-	{
-		if (glm::distance2(block_position, lights[i]) < 5000.0f)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-static bool dist(glm::vec2 l_0, glm::vec2 l_1)
-{
-	return glm::distance2(l_0, l_1) < 10.0f;
-}
-
-static bool dist1(glm::vec2 l_0, std::vector<glm::vec2>& lights)
-{
-	for (const auto light : lights)
-	{
-		if (dist(l_0, light))
-			return false;
-	}
-
-	return true;
+	lightPass->UpdateSpace();
 }
 
 void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& blocks_to_render, std::vector<glm::vec2>& lights_to_render, BlocksTileMap* tile_map, int start, int end)
@@ -102,57 +117,19 @@ void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec
 	TileFunction function;
 	glm::vec2 base_tile;
 
-	std::vector<glm::vec2> light_indices;
-
 	for (int x = start; x < end; x++)
 	{
 		for (int y = 0; y < blocks[0].size(); y++)
 		{
 			if (blocks[x][y].type == BlockType::Empty)
 			{
- 				if ((y + 1 < blocks[0].size() && blocks[x][y + 1].type != BlockType::Empty) || 
-				 	(y - 1 >= 0 && blocks[x][y - 1].type != BlockType::Empty))
+ 				if ((y + 1 < blocks[0].size() && blocks[x][y + 1].type != BlockType::Empty) || (y - 1 >= 0 && blocks[x][y - 1].type != BlockType::Empty))
 				{
-					if (light_indices.size() == 0 || dist1(glm::vec2(x, y), light_indices))
-					{
-						lights_to_render.push_back(blocks[x][y].worldPosition);
-						light_indices.emplace_back(x, y);
-					}
+					lights_to_render.push_back(blocks[x][y].worldPosition);
 				}
 			}
 		}
 	}
-	
-	// for (int i = 0; i < light_indices.size(); i++)
-	// {
-	// 	glm::vec2 index = light_indices[i];
-
-	// 	for (int _x = -5; _x < 5; _x++)
-	// 	{
-	// 		for (int _y = -5; _y < 5; _y++)
-	// 		{
-	// 			int x = std::max<int>(index.x + _x, 0);
-	// 			int y = std::max<int>(index.y + _y, 0);
-	// 			x = std::min<int>(x, blocks.size() - 1);
-	// 			y = std::min<int>(y, blocks[0].size() - 1);
-
-	// 			if (blocks[x][y].type != BlockType::Empty)
-	// 			{
-	// 				if (blocks[x][y].type != last_type)
-	// 				{
-	// 					function = PickTileFunction(blocks[x][y].type);
-	// 					base_tile = tile_map->Get(blocks[x][y].type);
-	// 				}
-
-	// 				const glm::vec2 block_texture_tile = base_tile + function(blocks, x, y);
-
-	// 				blocks_to_render.emplace_back(blocks[x][y].worldPosition, block_texture_tile);
-
-	// 				last_type = blocks[x][y].type;
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	for (int x = start; x < end; x++)
 	{
@@ -160,20 +137,17 @@ void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec
 		{
 			if (blocks[x][y].type != BlockType::Empty)
 			{
-				// if (BlockIsLit(blocks[x][y].worldPosition, lights_to_render))
+				if (blocks[x][y].type != last_type)
 				{
-					if (blocks[x][y].type != last_type)
-					{
-						function = PickTileFunction(blocks[x][y].type);
-						base_tile = tile_map->Get(blocks[x][y].type);
-					}
-
-					const glm::vec2 block_texture_tile = base_tile + function(blocks, x, y);
-
-					blocks_to_render.emplace_back(blocks[x][y].worldPosition, block_texture_tile);
-
-					last_type = blocks[x][y].type;
+					function = PickTileFunction(blocks[x][y].type);
+					base_tile = tile_map->Get(blocks[x][y].type);
 				}
+
+				const glm::vec2 block_texture_tile = base_tile + function(blocks, x, y);
+
+				blocks_to_render.emplace_back(blocks[x][y].worldPosition, block_texture_tile);
+
+				last_type = blocks[x][y].type;
 			}
 		}
 	}
@@ -236,6 +210,21 @@ void MapRenderer::Render(Vk::Frame* frame)
 	VkSemaphore* signal = &frame->GetRenderFinishedSemaphore();
 	VkFence fence = frame->GetInFlightFence();
 	Vk::CommandBuffer* cmd = GetCurrentCmd();
+
+	if (update)
+	{		
+		Vk::CommandPool* pool = commandPools[Vk::Global::swapChain->GetCurrentImageIndex()];
+		Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetCurrentScreenFramebuffer();
+
+		pool->Reset();
+			cmd->Begin();
+				colorPass->WriteToCmd(cmd, blocks);
+				lightPass->WriteToCmd(cmd, lights);
+				composition->WriteToCmd(cmd, framebuffer);
+			cmd->End();
+
+		update = false;
+	}
 
 	vkResetFences(Vk::Global::device->GetVkDevice(), 1, &fence);
 	cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal, fence);

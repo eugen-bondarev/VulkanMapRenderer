@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/world/map/blocks.h"
+#include "components/map/blocks.h"
 
 #include <functional>
 #include <map>

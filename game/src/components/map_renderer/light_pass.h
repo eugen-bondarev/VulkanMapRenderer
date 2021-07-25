@@ -8,22 +8,22 @@
 #include "components/map/map.h"
 #include "components/camera/camera.h"
 
-struct UBOScene
+struct UBOScene1
 {
 	glm::mat4x4 projection;
 };
 
 namespace Offscreen
 {		
-	class ColorPass
+	class LightPass
 	{
 	public:
-		ColorPass(Map* map, Camera* camera, Engine::Vk::DescriptorPool* descriptor_pool);
+		LightPass(Map* map, Camera* camera, Engine::Vk::DescriptorPool* descriptor_pool);
 
 		VkDescriptorImageInfo& GetOutputDescriptorImageInfo();
 
 		void WriteToCmd(Engine::Vk::CommandBuffer* cmd, int instances);
-		void UpdateBlocks(const std::vector<glm::vec4>& render_data);
+		void UpdateBlocks(const std::vector<glm::vec2>& render_data);
 		void UpdateSpace();
 
 	private:
@@ -41,15 +41,15 @@ namespace Offscreen
 		{
 			std::shared_ptr<Engine::Vk::Buffer> vertexBuffer;
 			std::shared_ptr<Engine::Vk::Buffer> indexBuffer;
-			std::shared_ptr<BlocksTileMap> tileMap;
-		} block;
+			std::shared_ptr<Engine::Vk::Texture2D> texture;
+		} light;
 
 		struct
 		{
 			struct 
 			{
 				std::shared_ptr<Engine::Vk::Buffer> buffer;
-				UBOScene data;
+				UBOScene1 data;
 			} perScene;
 		} ubo;
 		

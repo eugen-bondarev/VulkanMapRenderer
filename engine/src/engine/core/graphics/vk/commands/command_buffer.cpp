@@ -67,7 +67,7 @@ namespace Engine
 			VT_CHECK(vkQueueSubmit(queue, 1, &submit_info, fence));
 		}
 
-		void CommandBuffer::BeginRenderPass(RenderPass *render_pass, Framebuffer *framebuffer) const
+		void CommandBuffer::BeginRenderPass(RenderPass *render_pass, Framebuffer *framebuffer, const glm::vec4& color) const
 		{
 			VkRenderPassBeginInfo submit_info = {};
 			submit_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -75,8 +75,8 @@ namespace Engine
 			submit_info.framebuffer = framebuffer->GetVkFramebuffer();
 			submit_info.renderArea.extent = {static_cast<uint32_t>(framebuffer->GetSize().x), static_cast<uint32_t>(framebuffer->GetSize().y)};
 			submit_info.clearValueCount = 1;
-			VkClearValue clear_color = { 145.0f / 255.0f, 206.0f / 255.0f, 255.0f / 255.0f, 1.0f };
-			// VkClearValue clear_color = { 0.0f, 0.0f, 0.0f, 0.0f };
+			VkClearValue clear_color;
+			memcpy(&clear_color, &color, sizeof(VkClearValue));
 			submit_info.pClearValues = &clear_color;
 			
 			vkCmdBeginRenderPass(vkCommandBuffer, &submit_info, VK_SUBPASS_CONTENTS_INLINE);

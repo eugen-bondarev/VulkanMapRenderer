@@ -4,7 +4,7 @@
 
 #include <map>
 
-#include "game/world/map/blocks.h"
+#include "components/map/blocks.h"
 
 class TileMap : public Engine::Vk::Texture2D
 {

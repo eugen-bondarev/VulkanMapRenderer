@@ -5,7 +5,11 @@
 class Composition
 {
 public:
-	Composition(Engine::Vk::DescriptorPool* descriptor_pool, VkDescriptorImageInfo& color_pass_output_descriptor_info);
+	Composition(
+		Engine::Vk::DescriptorPool* descriptor_pool, 
+		VkDescriptorImageInfo& color_pass_output_descriptor_info,
+		VkDescriptorImageInfo& light_pass_output_descriptor_info
+	);
 
 	void WriteToCmd(Engine::Vk::CommandBuffer* cmd, Engine::Vk::Framebuffer* framebuffer);
 

@@ -2,14 +2,19 @@
 
 #include "color_pass.h"
 
-Composition::Composition(Engine::Vk::DescriptorPool* descriptor_pool, VkDescriptorImageInfo& color_pass_output_descriptor_info)
+Composition::Composition(
+	Engine::Vk::DescriptorPool* descriptor_pool, 
+	VkDescriptorImageInfo& color_pass_output_descriptor_info,
+	VkDescriptorImageInfo& light_pass_output_descriptor_info
+)
 {
 	using namespace Engine;
 
 	// Creating descriptor set layout (for the pipeline)
 	std::vector<VkDescriptorSetLayoutBinding> bindings = 
 	{
-		Vk::CreateBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+		Vk::CreateBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT),
+		Vk::CreateBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 	};
 
 	descriptorSetLayout = std::make_shared<Vk::DescriptorSetLayout>(bindings);
@@ -72,8 +77,14 @@ Composition::Composition(Engine::Vk::DescriptorPool* descriptor_pool, VkDescript
 		Vk::CreateWriteDescriptorSet(
 			descriptorSet.get(), 
 			0, 
-			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER , 
+			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 
 			&color_pass_output_descriptor_info
+		),
+		Vk::CreateWriteDescriptorSet(
+			descriptorSet.get(), 
+			1, 
+			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 
+			&light_pass_output_descriptor_info
 		)
 	};
 
@@ -82,7 +93,9 @@ Composition::Composition(Engine::Vk::DescriptorPool* descriptor_pool, VkDescript
 
 void Composition::WriteToCmd(Engine::Vk::CommandBuffer* cmd, Engine::Vk::Framebuffer* framebuffer)
 {
-	cmd->BeginRenderPass(pipeline->GetRenderPass(), framebuffer);
+	static glm::vec3 sky_color = glm::vec3(99, 195, 255);
+
+	cmd->BeginRenderPass(pipeline->GetRenderPass(), framebuffer, glm::vec4(sky_color / 255.0f, 1.0f));
 		cmd->BindPipeline(pipeline.get());
 			cmd->BindVertexBuffers({ canvas.vertexBuffer.get() }, { 0 });
 			cmd->BindIndexBuffer(canvas.indexBuffer.get());

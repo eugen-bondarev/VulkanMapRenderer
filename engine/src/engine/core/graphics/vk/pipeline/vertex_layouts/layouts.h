@@ -22,5 +22,13 @@ namespace Engine
 			static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
 			static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
 		};
+
+		struct PerInstanceVertex2D
+		{
+			glm::vec2 Position;
+
+			static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
+			static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
+		};
 	}
 }

@@ -58,7 +58,34 @@ namespace Engine
 			attributeDescriptions[0].binding = 1;
 			attributeDescriptions[0].location = 2;
 			attributeDescriptions[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-			attributeDescriptions[0].offset = offsetof(Vertex, Position);
+			attributeDescriptions[0].offset = offsetof(PerInstanceVertex, Position);
+
+			return attributeDescriptions;
+		}
+
+		std::vector<VkVertexInputBindingDescription> PerInstanceVertex2D::GetBindingDescriptions()
+		{
+			std::vector<VkVertexInputBindingDescription> binding_descriptions;
+
+			VkVertexInputBindingDescription binding_description = {};
+			binding_description.binding = 1;
+			binding_description.stride = sizeof(PerInstanceVertex2D);
+			binding_description.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+			
+			binding_descriptions.push_back(binding_description);
+
+			return binding_descriptions;
+		}
+
+		std::vector<VkVertexInputAttributeDescription> PerInstanceVertex2D::GetAttributeDescriptions() 
+		{
+			std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+			attributeDescriptions.resize(1, {});
+
+			attributeDescriptions[0].binding = 1;
+			attributeDescriptions[0].location = 2;
+			attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[0].offset = offsetof(PerInstanceVertex, Position);
 
 			return attributeDescriptions;
 		}

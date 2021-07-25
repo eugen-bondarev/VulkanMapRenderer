@@ -4,7 +4,7 @@
 
 #include <engine/engine.h>
 
-#include "game/world/map/blocks.h"
+#include "blocks.h"
 
 #include "FastNoiseLite/FastNoiseLite.h"
 

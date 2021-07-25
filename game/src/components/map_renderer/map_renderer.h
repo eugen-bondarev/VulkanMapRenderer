@@ -6,6 +6,7 @@
 
 #include "renderer/atlas/tile_map.h"
 #include "color_pass.h"
+#include "light_pass.h"
 #include "composition.h"
 
 class MapRenderer : public Component
@@ -26,12 +27,18 @@ public:
 	std::vector<Engine::Vk::CommandBuffer*>& GetCommandBuffers();
 	Engine::Vk::CommandBuffer* GetCurrentCmd();
 
+	bool update { true };
+	int blocks { 0 };
+	int lights { 0 };
+
 private:
 	Map* map;
 	Camera* camera;
 
+	std::vector<Engine::Vk::CommandPool*> commandPools;
 	std::vector<Engine::Vk::CommandBuffer*> commandBuffers;
 	Offscreen::ColorPass* colorPass;
+	Offscreen::LightPass* lightPass;
 	Composition* composition;
 
 	MapRenderer(const MapRenderer&) = delete;
