@@ -37,14 +37,10 @@ void MapRenderer::Init(Map* map, Camera* camera, Vk::DescriptorPool* descriptor_
 		commandPools.push_back(pool);
 	}
 
-	
-	std::vector<glm::vec4> blocks_to_render;
-	std::vector<glm::vec2> lights_to_render;
-
 	GetRenderData(map, camera->GetPosition(), blocks_to_render, lights_to_render);
 
-	// colorPass->UpdateBlocks(blocks_to_render);
-	// lightPass->UpdateBlocks(lights_to_render);
+	colorPass->UpdateBlocks(blocks_to_render);
+	lightPass->UpdateBlocks(lights_to_render);
 
 	for (int i = 0; i < Vk::Global::swapChain->GetImageViews().size(); i++)
 	{
@@ -91,16 +87,13 @@ void MapRenderer::FillCommandBuffers()
 
 void MapRenderer::Update()
 {
-	std::vector<glm::vec4> blocks_to_render;
-	std::vector<glm::vec2> lights_to_render;
+	blocks_to_render.clear();
+	lights_to_render.clear();
 
 	GetRenderData(map, camera->GetPosition(), blocks_to_render, lights_to_render);
 
 	colorPass->UpdateBlocks(blocks_to_render);	
 	lightPass->UpdateBlocks(lights_to_render);
-
-	blocks = blocks_to_render.size();
-	lights = lights_to_render.size();
 }
 
 void MapRenderer::UpdateSpace()
@@ -154,7 +147,8 @@ void Async_GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec
 }
 
 /*
-* Note: parallelism doesn't work well here
+* Note: 
+*	Parallelism doesn't work well here
 */
 void MapRenderer::GetRenderData(Map* map, glm::vec2 view_position, std::vector<glm::vec4>& blocks_to_render, std::vector<glm::vec2>& lights_to_render)
 {
@@ -165,6 +159,7 @@ void MapRenderer::GetRenderData(Map* map, glm::vec2 view_position, std::vector<g
 	const auto& blocks = map->GetBlocks();
 
 	blocks_to_render.reserve(blocks.size() * blocks[0].size());
+	lights_to_render.reserve(300);
 
 // #define ASYNC
 
@@ -189,7 +184,7 @@ void MapRenderer::GetRenderData(Map* map, glm::vec2 view_position, std::vector<g
 	intervals.emplace_back(start, end);
 
 	std::for_each(
-		std::execution::par_unseq,
+		std::execution::par,
 		intervals.begin(),
 		intervals.end(),
 		[&](glm::vec2& interval) 
@@ -209,34 +204,45 @@ void MapRenderer::Render(Vk::Frame* frame)
 	VkSemaphore* wait = &frame->GetImageAvailableSemaphore();
 	VkSemaphore* signal = &frame->GetRenderFinishedSemaphore();
 	VkFence fence = frame->GetInFlightFence();
-	Vk::CommandBuffer* cmd = GetCurrentCmd();
+	Vk::CommandBuffer* cmd = GetCurrentCmdBuffer();
 
-	if (update)
-	{		
-		Vk::CommandPool* pool = commandPools[Vk::Global::swapChain->GetCurrentImageIndex()];
+	if (updateCmdBuffers)
+	{
 		Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetCurrentScreenFramebuffer();
+		Vk::CommandPool* pool = GetCurrentCmdPool();
 
 		pool->Reset();
 			cmd->Begin();
-				colorPass->WriteToCmd(cmd, blocks);
-				lightPass->WriteToCmd(cmd, lights);
+				colorPass->WriteToCmd(cmd, blocks_to_render.size());
+				lightPass->WriteToCmd(cmd, lights_to_render.size());
 				composition->WriteToCmd(cmd, framebuffer);
 			cmd->End();
 
-		update = false;
+		updateCmdBuffers = false;
 	}
 
 	vkResetFences(Vk::Global::device->GetVkDevice(), 1, &fence);
 	cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal, fence);
 }
 
-std::vector<Vk::CommandBuffer*>& MapRenderer::GetCommandBuffers()
+Engine::Vk::CommandPool* MapRenderer::GetCurrentCmdPool()
 {
-	return commandBuffers;
+	uint32_t image_index = Vk::Global::swapChain->GetCurrentImageIndex(); 
+	return commandPools[image_index];
 }
 
-Engine::Vk::CommandBuffer* MapRenderer::GetCurrentCmd()
+Engine::Vk::CommandBuffer* MapRenderer::GetCurrentCmdBuffer()
 {
 	uint32_t image_index = Vk::Global::swapChain->GetCurrentImageIndex(); 
 	return commandBuffers[image_index];
+}
+
+void MapRenderer::UpdateCmdBuffers()
+{
+	updateCmdBuffers = true;
+}
+
+std::vector<Vk::CommandBuffer*>& MapRenderer::GetCommandBuffers()
+{
+	return commandBuffers;
 }

@@ -11,6 +11,5 @@ void main()
 {
 	vec4 pureColor = texture(texSampler, fragTexCoords);
 	float light = texture(lightPassResult, fragTexCoords).r;
-	float acc = pow(light, 1);
-	outColor = vec4(pureColor.xyz * acc, pureColor.a);
+	outColor = vec4(pureColor.xyz * light, pureColor.a);
 }

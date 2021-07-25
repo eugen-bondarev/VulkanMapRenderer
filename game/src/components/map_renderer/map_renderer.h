@@ -25,15 +25,19 @@ public:
 	void Render(Engine::Vk::Frame* frame);
 
 	std::vector<Engine::Vk::CommandBuffer*>& GetCommandBuffers();
-	Engine::Vk::CommandBuffer* GetCurrentCmd();
+	Engine::Vk::CommandPool* GetCurrentCmdPool();
+	Engine::Vk::CommandBuffer* GetCurrentCmdBuffer();
 
-	bool update { true };
-	int blocks { 0 };
-	int lights { 0 };
+	void UpdateCmdBuffers();
 
 private:
 	Map* map;
 	Camera* camera;
+
+	bool updateCmdBuffers { true };
+	
+	std::vector<glm::vec4> blocks_to_render;
+	std::vector<glm::vec2> lights_to_render;
 
 	std::vector<Engine::Vk::CommandPool*> commandPools;
 	std::vector<Engine::Vk::CommandBuffer*> commandBuffers;

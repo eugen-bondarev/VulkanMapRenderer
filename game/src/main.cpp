@@ -87,10 +87,9 @@ void NaturaForge::Init()
 
 	InitCommonResources();
 
+	game->map->CalculateVisibleChunks(game->camera->GetPosition());
+	game->map->PopulateBlocks();
 	game->mapRenderer->Init(game->map, game->camera, common.descriptorPool);
-
-	// mapRenderer = new MapRenderer(common.descriptorPool, game);	
-	game->mapRenderer->FillCommandBuffers();
 
 	InitImGui();
 }
@@ -100,7 +99,7 @@ void NaturaForge::UpdateMap()
 	if (game->camera->GetEvents() & CameraEvents_PositionChanged)
 	{
 		game->map->CalculateVisibleChunks(game->camera->GetPosition());
-		game->mapRenderer->update = true;
+		game->mapRenderer->UpdateCmdBuffers();
 		if (game->map->lastVisibleChunks.start != game->map->visibleChunks.start || game->map->lastVisibleChunks.end != game->map->visibleChunks.end)
 		{
 			game->map->PopulateBlocks();
