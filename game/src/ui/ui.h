@@ -7,6 +7,12 @@
 namespace UI
 {
 	void ClearStack();
-	void AddToStack(const std::function<void()>& function);
+	void Push(const std::function<void()>& function);
 	void ExecuteStack();
 }
+
+#define UI_PUSH(x)\
+	::UI::Push([&]()\
+	{\
+		x\
+	})

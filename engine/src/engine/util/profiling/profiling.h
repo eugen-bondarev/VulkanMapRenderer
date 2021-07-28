@@ -17,7 +17,7 @@
 
 #pragma once
 
-#define VT_ENABLE_PROFILING
+// #define VT_ENABLE_PROFILING
 
 #ifdef VT_ENABLE_PROFILING
 

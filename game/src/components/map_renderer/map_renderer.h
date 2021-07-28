@@ -14,9 +14,8 @@
 class MapRenderer : public Component, public Collections::IRenderable, public Collections::IOnUpdate
 {
 public:
-	MapRenderer();
+	MapRenderer(Camera* camera, Map* map);
 	~MapRenderer();
-	void Init(Map* map, Camera* camera, Engine::Vk::DescriptorPool* descriptor_pool);
 
 	void UpdateRenderData();
 	void UpdateSpace();
@@ -36,7 +35,6 @@ private:
 	Map* map;
 	Camera* camera;
 
-	bool initialized { false };
 	bool updateCmdBuffers { true };
 	
 	std::vector<glm::vec4> blocks_to_render;

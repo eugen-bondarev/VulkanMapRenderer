@@ -4,12 +4,12 @@ Game::Game()
 {
 	mapEntity = new Entity();
 
-	camera = AddComponent<Camera>(mapEntity);
-	map = AddComponent<Map>(mapEntity);
-	mapRenderer = AddComponent<MapRenderer>(mapEntity);
+	camera = mapEntity->AddComponent<Camera>();
+	map = mapEntity->AddComponent<Map>(camera);
+	mapRenderer = mapEntity->AddComponent<MapRenderer>(camera, map);
 
 	uiEntity = new Entity();
-	uiRenderer = AddComponent<UIRenderer>(uiEntity);
+	uiRenderer = uiEntity->AddComponent<UIRenderer>();
 }
 
 Game::~Game()

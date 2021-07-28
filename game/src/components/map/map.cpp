@@ -48,10 +48,12 @@ BlockType WhatBlockType(float noise_value, TilePos tile_pos)
 	return type;
 }
 
-Map::Map()
+Map::Map(Camera* camera) : camera { camera }
 {
 	DetermineDimensionsInBlocks();
 	noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
+	CalculateVisibleChunks(camera->GetPosition());
+	PopulateBlocks();
 }
 
 Map::~Map()

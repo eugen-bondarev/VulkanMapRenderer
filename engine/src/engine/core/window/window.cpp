@@ -40,6 +40,11 @@ namespace Engine
 		VT_TRACE();
 	}
 
+	void Window::Close() const
+	{
+		glfwSetWindowShouldClose(glfwWindow, 1);
+	}
+
 	bool Window::ShouldClose() const
 	{
 		return glfwWindowShouldClose(glfwWindow);

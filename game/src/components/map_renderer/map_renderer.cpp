@@ -10,30 +10,17 @@
 
 #include <glm/gtx/norm.hpp>
 
+#include "sync/sync.h"
+
 using namespace Engine;
 
-MapRenderer::MapRenderer()
+MapRenderer::MapRenderer(Camera* camera, Map* map) : camera { camera }, map { map }
 {
-
-}
-
-void MapRenderer::Init(Map* map, Camera* camera, Vk::DescriptorPool* descriptor_pool)
-{
-	this->map = map;
-	this->camera = camera;
-
-	colorPass = new Offscreen::ColorPass(map, camera, descriptor_pool);
-	lightPass = new Offscreen::LightPass(map, camera, descriptor_pool);
-	composition = new Composition(
-		descriptor_pool, 
-		colorPass->GetOutputDescriptorImageInfo(),
-		lightPass->GetOutputDescriptorImageInfo()
-	);
-
-	delete composition;
+	colorPass = new Offscreen::ColorPass(map, camera, Vk::Global::descriptorPool);
+	lightPass = new Offscreen::LightPass(map, camera, Vk::Global::descriptorPool);
 
 	composition = new Composition(
-		descriptor_pool, 
+		Vk::Global::descriptorPool, 
 		colorPass->GetOutputDescriptorImageInfo(),
 		lightPass->GetOutputDescriptorImageInfo()
 	);
@@ -64,26 +51,21 @@ void MapRenderer::Init(Map* map, Camera* camera, Vk::DescriptorPool* descriptor_
 				composition->WriteToCmd(cmd, framebuffer);
 			cmd->End();
 	}
-
-	initialized = true;
 }
 
 MapRenderer::~MapRenderer()
 {
-	if (initialized)
+	delete composition;
+
+	delete lightPass;
+
+	delete colorPass;
+
+	for (int i = 0; i < commandBuffers.size(); i++)
 	{
-		delete composition;
+		delete commandBuffers[i];
 
-		delete lightPass;
-
-		delete colorPass;
-
-		for (int i = 0; i < commandBuffers.size(); i++)
-		{
-			delete commandBuffers[i];
-
-			delete commandPools[i];
-		}
+		delete commandPools[i];
 	}
 }
 
@@ -241,7 +223,9 @@ void MapRenderer::GetRenderData(Map* map)
 void MapRenderer::Update()
 {
 	if (camera->GetEvents() & CameraEvents_PositionChanged)
-	{
+	{		
+		UpdateSpace();
+
 		map->CalculateVisibleChunks(camera->GetPosition());
 		UpdateCmdBuffers();
 		if (map->lastVisibleChunks.start != map->visibleChunks.start || map->lastVisibleChunks.end != map->visibleChunks.end)
@@ -256,8 +240,9 @@ void MapRenderer::Update()
 
 void MapRenderer::Render(Vk::Frame* frame)
 {
-	VkSemaphore* wait = &frame->GetImageAvailableSemaphore();
-	VkSemaphore* signal = &frame->GetRenderFinishedSemaphore();
+	VkSemaphore* wait = &frame->GetSemaphore(FrameSemaphore_ImageAvailable);
+	VkSemaphore* signal = &frame->GetSemaphore(FrameSemaphore_MapRenderFinished);
+
 	VkFence fence = frame->GetInFlightFence();
 	Vk::CommandBuffer* cmd = GetCurrentCmdBuffer();
 

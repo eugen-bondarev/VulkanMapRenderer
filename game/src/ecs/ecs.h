@@ -24,57 +24,57 @@ struct Entity
 		for (auto& component : components)
 			delete component;
 	}
-};
 
-template <typename T, typename... Args>
-T* AddComponent(Entity* entity, Args&&... args)
-{
-	T* component = new T(std::forward<Args>(args)...);
-	entity->components.push_back(component);
-	
-	Collections::AddToCollection(component);
-
-	component->entity = entity;
-	return component;
-}
-
-template <typename T>
-T* GetComponent(Entity* entity)
-{
-	for (int i = 0; i < entity->components.size(); i++)
-		if (T* component = dynamic_cast<T*>(entity->components[i]))
-			return component;
-
-	return nullptr;
-}
-
-template <typename T>
-void RemoveComponent(Entity* entity)
-{
-	T* component = GetComponent<T>(entity);
-
-	if (component)
+	template <typename T, typename... Args>
+	T* AddComponent(Args&&... args)
 	{
-		for (int i = 0; i < entity->components.size(); i++)
+		T* component = new T(std::forward<Args>(args)...);
+		components.push_back(component);
+		
+		Collections::AddToCollection(component);
+
+		component->entity = this;
+		return component;
+	}
+
+	template <typename T>
+	T* GetComponent()
+	{
+		for (int i = 0; i < components.size(); i++)
+			if (T* component = dynamic_cast<T*>(components[i]))
+				return component;
+
+		return nullptr;
+	}
+
+	template <typename T>
+	void RemoveComponent()
+	{
+		T* component = GetComponent<T>(entity);
+
+		if (component)
 		{
-			if (entity->components[i] == component)
+			for (int i = 0; i < components.size(); i++)
 			{
-				// Removing from entity's component list
+				if (components[i] == component)
 				{
-					Engine::Util::Vector::RemoveAt(entity->components, i);
-				}
+					// Removing from entity's component list
+					{
+						Engine::Util::Vector::RemoveAt(components, i);
+					}
 
-				// Removing from a collection (if there is one containing it)
-				{
-					Collections::RemoveFromCollection(component);
-				}
+					// Removing from a collection (if there is one containing it)
+					{
+						Collections::RemoveFromCollection(component);
+					}
 
-				{
-					delete component;
+					{
+						delete component;
+					}
+					
+					break;
 				}
-				
-				break;
 			}
 		}
 	}
-}
+};

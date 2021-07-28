@@ -9,7 +9,7 @@ namespace UI
 		stack.clear();
 	}
 
-	void AddToStack(const std::function<void()>& function)
+	void Push(const std::function<void()>& function)
 	{
 		stack.push_back(function);
 	}

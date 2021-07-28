@@ -1,12 +1,13 @@
 #include "frame.h"
 
 #include "../device/device.h"
+#include "../swap_chain/swap_chain.h"
 
 namespace Engine
 {
 	namespace Vk
 	{
-		Frame::Frame()
+		Frame::Frame(int amount_of_semaphores)
 		{
 			VkSemaphoreCreateInfo semaphore_info{};
 			semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -15,33 +16,27 @@ namespace Engine
 			fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 			fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-			VT_CHECK(vkCreateSemaphore(Vk::Global::device->GetVkDevice(), &semaphore_info, nullptr, &imageAvailable));
-			VT_CHECK(vkCreateSemaphore(Vk::Global::device->GetVkDevice(), &semaphore_info, nullptr, &renderFinished));
-			VT_CHECK(vkCreateSemaphore(Vk::Global::device->GetVkDevice(), &semaphore_info, nullptr, &imGuiRenderFinished));
-			VT_CHECK(vkCreateFence(Vk::Global::device->GetVkDevice(), &fence_info, nullptr, &inFlightFence));
+			semaphores.resize(amount_of_semaphores);
+
+			for (int i = 0; i < amount_of_semaphores; i++)
+			{
+				VT_CHECK(vkCreateSemaphore(Global::device->GetVkDevice(), &semaphore_info, nullptr, &semaphores[i]));
+			}
+			
+			VT_CHECK(vkCreateFence(Global::device->GetVkDevice(), &fence_info, nullptr, &inFlightFence));
 		}
 
 		Frame::~Frame()
 		{
-			vkDestroySemaphore(Vk::Global::device->GetVkDevice(), imageAvailable, nullptr);
-			vkDestroySemaphore(Vk::Global::device->GetVkDevice(), renderFinished, nullptr);
-			vkDestroySemaphore(Vk::Global::device->GetVkDevice(), imGuiRenderFinished, nullptr);
-			vkDestroyFence(Vk::Global::device->GetVkDevice(), inFlightFence, nullptr);
+			for (auto& semaphore : semaphores)
+				vkDestroySemaphore(Global::device->GetVkDevice(), semaphore, nullptr);
+
+			vkDestroyFence(Global::device->GetVkDevice(), inFlightFence, nullptr);
 		}
 
-		VkSemaphore& Frame::GetImageAvailableSemaphore()
+		VkSemaphore& Frame::GetSemaphore(int semaphore_id)
 		{
-			return imageAvailable;
-		}
-
-		VkSemaphore& Frame::GetRenderFinishedSemaphore()
-		{
-			return renderFinished;
-		}
-
-		VkSemaphore& Frame::GetImGuiRenderFinishedSemaphore()
-		{
-			return imGuiRenderFinished;
+			return semaphores[semaphore_id];
 		}
 
 		VkFence& Frame::GetInFlightFence()
@@ -49,12 +44,14 @@ namespace Engine
 			return inFlightFence;
 		}
 
-		FrameManager::FrameManager(int frames_count) : framesCount { frames_count }
+		FrameManager::FrameManager(int amount_of_semaphores_per_frame, int frames_count) : framesCount { frames_count }
 		{		
 			for (int i = 0; i < frames_count; i++)
 			{
-				frames.push_back(new Frame());
+				frames.push_back(new Frame(amount_of_semaphores_per_frame));
 			}
+
+			imagesInFlight.resize(Global::swapChain->GetImageViews().size());
 		}
 
 		FrameManager::~FrameManager()
@@ -63,6 +60,30 @@ namespace Engine
 			{
 				delete frames[i];
 			}
+		}
+
+		uint32_t FrameManager::AcquireSwapChainImage(int image_acquired_semaphore)
+		{
+			Frame* frame = GetCurrentFrame();
+			
+			uint32_t image_index = Global::swapChain->AcquireImage(frame->GetSemaphore(image_acquired_semaphore));
+
+			if (imagesInFlight[image_index] != VK_NULL_HANDLE)
+			{
+				vkWaitForFences(Global::device->GetVkDevice(), 1, &imagesInFlight[image_index], VK_TRUE, UINT64_MAX);
+			}
+			
+			vkWaitForFences(Global::device->GetVkDevice(), 1, &frame->GetInFlightFence(), VK_TRUE, UINT64_MAX);
+			vkResetFences(Global::device->GetVkDevice(), 1, &frame->GetInFlightFence());
+			imagesInFlight[image_index] = frame->GetInFlightFence();
+
+			return image_index;
+		}
+
+		void FrameManager::Present(int last_semaphore)
+		{			
+			Global::swapChain->Present(&GetCurrentFrame()->GetSemaphore(last_semaphore), 1);
+			NextFrame();
 		}
 
 		void FrameManager::NextFrame()

@@ -14,10 +14,12 @@ enum CameraEvents_
 };
 ENUM_USE_FOR_FLAGS(CameraEvents_)
 
-class Camera : public ITransform, public Component
+class Camera : public ITransform, public Component, public Collections::IOnUpdate
 {
 public:
 	Camera();
+
+	void Update() override;
 
 	void CalculateTransformMatrix() override;
 	void CalculateProjectionViewMatrix();

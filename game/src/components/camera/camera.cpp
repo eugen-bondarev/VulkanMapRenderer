@@ -36,6 +36,36 @@ void Camera::CheckPositionChange()
 	}
 }
 
+void Camera::Update()
+{
+	events = CameraEvents_None;
+
+	if (position != lastPosition)
+	{
+		events |= CameraEvents_PositionChanged;
+		lastPosition = position;
+	}
+	
+	static float speed = 1500.0f;
+
+	if (glfwGetKey(Engine::window->GetGLFWWindow(), GLFW_KEY_W))
+	{
+		AddPosition(glm::vec2(0, -1) * Engine::Time::GetDelta() * speed);
+	}
+	if (glfwGetKey(Engine::window->GetGLFWWindow(), GLFW_KEY_S))
+	{
+		AddPosition(glm::vec2(0, 1) * Engine::Time::GetDelta() * speed);
+	}
+	// if (glfwGetKey(Engine::window->GetGLFWWindow(), GLFW_KEY_D))
+	{
+		AddPosition(glm::vec2(1, 0) * Engine::Time::GetDelta() * speed);
+	}
+	if (glfwGetKey(Engine::window->GetGLFWWindow(), GLFW_KEY_A))
+	{
+		AddPosition(glm::vec2(-1, 0) * Engine::Time::GetDelta() * speed);
+	}
+}
+
 CameraEvents_& Camera::GetEvents()
 {
 	return events;

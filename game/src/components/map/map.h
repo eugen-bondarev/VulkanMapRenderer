@@ -8,6 +8,8 @@
 
 #include "FastNoiseLite/FastNoiseLite.h"
 
+#include "../camera/camera.h"
+
 class Map : public Component
 {
 friend class MapRenderer;
@@ -27,7 +29,7 @@ public:
 	} visibleChunks, lastVisibleChunks;
 
 public:
-	Map();
+	Map(Camera* camera);
 	~Map();
 
 	void CalculateVisibleChunks(glm::vec2 view_position);
@@ -53,6 +55,8 @@ public:
 	bool WithinBottomBounds(glm::vec2 indices) const;
 	
 private:
+	Camera* camera;
+
 	Blocks_t blocks;
 	Walls_t walls;
 

@@ -18,6 +18,8 @@ namespace Engine
 		Window(glm::vec2 size, Mode mode, const std::string& title = "NaturaForge");
 		~Window();
 
+		void Close() const;
+
 		bool ShouldClose() const;
 		glm::vec2 GetSize() const;
 

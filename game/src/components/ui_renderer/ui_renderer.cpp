@@ -5,6 +5,7 @@
 #include "imgui/imgui_impl_vulkan.h"
 
 #include "ui/ui.h"
+#include "sync/sync.h"
 
 using namespace Engine;
 
@@ -79,29 +80,27 @@ UIRenderer::~UIRenderer()
 void UIRenderer::Render(Engine::Vk::Frame* frame)
 {
 	VT_PROFILER_SCOPE();
-	
-	ImGui_ImplVulkan_NewFrame();
-	ImGui_ImplGlfw_NewFrame();
-	ImGui::NewFrame();
 
-	UI::ExecuteStack();
-	UI::ClearStack();
-
-	ImGui::Render();
+	VkSemaphore* wait = &frame->GetSemaphore(FrameSemaphore_MapRenderFinished);
+	VkSemaphore* signal = &frame->GetSemaphore(FrameSemaphore_ImGuiRenderFinished);
 
 	Vk::CommandPool* pool = commandPools[Vk::Global::swapChain->GetCurrentImageIndex()];
 	Vk::CommandBuffer* cmd = commandBuffers[Vk::Global::swapChain->GetCurrentImageIndex()];
 	Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetCurrentScreenFramebuffer();
-
-	VkSemaphore* wait = &frame->GetRenderFinishedSemaphore();
-	VkSemaphore* signal = &frame->GetImGuiRenderFinishedSemaphore();
+	
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+		UI::ExecuteStack();
+		UI::ClearStack();
+	ImGui::Render();
 	
 	pool->Reset();
-	cmd->Begin();
-		cmd->BeginRenderPass(renderPass, framebuffer);
-			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->GetVkCommandBuffer());
-		cmd->EndRenderPass();
-	cmd->End();
+		cmd->Begin();
+			cmd->BeginRenderPass(renderPass, framebuffer);
+				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->GetVkCommandBuffer());
+			cmd->EndRenderPass();
+		cmd->End();
 
 	cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal);
 }
