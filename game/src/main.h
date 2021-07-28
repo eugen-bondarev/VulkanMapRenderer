@@ -1,6 +1,6 @@
 #include <engine/engine.h>
 
-#include "game/game.h"
+#include "state/state.h"
 
 using namespace Engine;
 
@@ -12,7 +12,7 @@ public:
 	void Shutdown() override;
 
 private:
-	std::shared_ptr<Game> game;
+	std::shared_ptr<State> state;
 	Vk::FrameManager* frameManager;
 };
 

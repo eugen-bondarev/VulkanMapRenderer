@@ -1,28 +1,29 @@
 #pragma once
 
 #include "ecs/ecs.h"
+
+#include "components/camera/camera.h"
 #include "components/map/map.h"
 #include "components/map_renderer/map_renderer.h"
-#include "components/camera/camera.h"
 
 #include "components/ui_renderer/ui_renderer.h"
 
-class Game
+class State
 {
 public:
-	Game();
-	~Game();
+	State();
+	~State();
 
 	Entity* mapEntity;
+	Entity* uiEntity;
+
+	Camera* camera;
 	Map* map;
 	MapRenderer* mapRenderer;
 
-	Camera* camera;
-
-	Entity* uiEntity;
 	UIRenderer* uiRenderer;
 
 private:
-	Game(const Game&) = delete;
-	Game& operator=(const Game&) = delete;
+	State(const State&) = delete;
+	State& operator=(const State&) = delete;
 };

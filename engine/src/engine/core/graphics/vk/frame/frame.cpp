@@ -7,7 +7,7 @@ namespace Engine
 {
 	namespace Vk
 	{
-		Frame::Frame(int amount_of_semaphores)
+		Frame::Frame(int first_semaphore, int last_semaphore, int amount_of_semaphores) : firstSemaphore { first_semaphore }, lastSemaphore { last_semaphore }
 		{
 			VkSemaphoreCreateInfo semaphore_info{};
 			semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -44,11 +44,11 @@ namespace Engine
 			return inFlightFence;
 		}
 
-		FrameManager::FrameManager(int amount_of_semaphores_per_frame, int frames_count) : framesCount { frames_count }
+		FrameManager::FrameManager(int first_semaphore, int last_semaphore, int amount_of_semaphores_per_frame, int frames_count) : framesCount { frames_count }
 		{		
 			for (int i = 0; i < frames_count; i++)
 			{
-				frames.push_back(new Frame(amount_of_semaphores_per_frame));
+				frames.push_back(new Frame(first_semaphore, last_semaphore, amount_of_semaphores_per_frame));
 			}
 
 			imagesInFlight.resize(Global::swapChain->GetImageViews().size());
@@ -62,11 +62,10 @@ namespace Engine
 			}
 		}
 
-		uint32_t FrameManager::AcquireSwapChainImage(int image_acquired_semaphore)
+		uint32_t FrameManager::AcquireSwapChainImage()
 		{
-			Frame* frame = GetCurrentFrame();
-			
-			uint32_t image_index = Global::swapChain->AcquireImage(frame->GetSemaphore(image_acquired_semaphore));
+			Frame* frame = GetCurrentFrame();			
+			uint32_t image_index = Global::swapChain->AcquireImage(frame->GetSemaphore(frame->firstSemaphore));
 
 			if (imagesInFlight[image_index] != VK_NULL_HANDLE)
 			{
@@ -80,9 +79,10 @@ namespace Engine
 			return image_index;
 		}
 
-		void FrameManager::Present(int last_semaphore)
+		void FrameManager::Present()
 		{			
-			Global::swapChain->Present(&GetCurrentFrame()->GetSemaphore(last_semaphore), 1);
+			Frame* frame = GetCurrentFrame();
+			Global::swapChain->Present(&frame->GetSemaphore(frame->lastSemaphore), 1);
 			NextFrame();
 		}
 

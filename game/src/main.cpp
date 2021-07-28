@@ -6,26 +6,26 @@
 
 void NaturaForge::Init()
 {
-	game = std::make_shared<Game>();
-	frameManager = new Vk::FrameManager(FrameSemaphore_COUNT, 2);
+	state = std::make_shared<State>();
+	frameManager = new Vk::FrameManager(FrameSemaphore_FIRST_STAGE, FrameSemaphore_LAST_STAGE, FrameSemaphore_COUNT, 2);
 }
 
 void NaturaForge::Update()
 {
 	VT_PROFILER_SCOPE();
 
-	frameManager->AcquireSwapChainImage(FrameSemaphore_FIRST_STAGE);
+	frameManager->AcquireSwapChainImage();
 
-	UI_PUSH(
-		ImGui::Begin("Info");
-			ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-		ImGui::End();
-	);
+		UI_PUSH(
+			ImGui::Begin("Info");
+				ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+			ImGui::End();
+		);
+		
+		Collections::IOnUpdate::UpdateAll();
+		Collections::IRenderable::RenderAll(frameManager->GetCurrentFrame());
 	
-	Collections::IOnUpdate::UpdateAll();
-	Collections::IRenderable::RenderAll(frameManager->GetCurrentFrame());
-	
-	frameManager->Present(FrameSemaphore_LAST_STAGE);
+	frameManager->Present();
 }
 
 void NaturaForge::Shutdown()

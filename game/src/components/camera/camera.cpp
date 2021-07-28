@@ -56,7 +56,7 @@ void Camera::Update()
 	{
 		AddPosition(glm::vec2(0, 1) * Engine::Time::GetDelta() * speed);
 	}
-	// if (glfwGetKey(Engine::window->GetGLFWWindow(), GLFW_KEY_D))
+	if (glfwGetKey(Engine::window->GetGLFWWindow(), GLFW_KEY_D))
 	{
 		AddPosition(glm::vec2(1, 0) * Engine::Time::GetDelta() * speed);
 	}

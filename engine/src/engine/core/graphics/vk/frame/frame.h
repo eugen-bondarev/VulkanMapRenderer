@@ -8,8 +8,10 @@ namespace Engine
 	{
 		class Frame
 		{
+		friend class FrameManager;
+
 		public:
-			Frame(int amount_of_semaphores);
+			Frame(int first_semaphore, int last_semaphore, int amount_of_semaphores);
 			~Frame();
 
 			VkSemaphore& GetSemaphore(int semaphore_id);
@@ -19,6 +21,9 @@ namespace Engine
 			std::vector<VkSemaphore> semaphores;
 
 		private:
+			int firstSemaphore;
+			int lastSemaphore;
+
 			VkFence inFlightFence;
 
 			Frame(const Frame&) = delete;
@@ -28,7 +33,7 @@ namespace Engine
 		class FrameManager
 		{
 		public:
-			FrameManager(int amount_of_semaphores_per_frame, int frames_count);
+			FrameManager(int first_semaphore, int last_semaphore, int amount_of_semaphores_per_frame, int frames_count);
 			~FrameManager();
 
 			void NextFrame();
@@ -37,8 +42,8 @@ namespace Engine
 			int GetAmountOfFrames() const;
 			int GetCurrentFrameIndex() const;
 
-			uint32_t AcquireSwapChainImage(int image_acquired_semaphore);
-			void Present(int last_semaphore);
+			uint32_t AcquireSwapChainImage();
+			void Present();
 
 			std::vector<VkFence> imagesInFlight;
 			
