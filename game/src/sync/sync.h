@@ -11,3 +11,14 @@ enum FrameSemaphore_
 	
 	FrameSemaphore_COUNT = FrameSemaphore_LAST_STAGE + 1
 };
+
+enum MenuFrameSemaphore_
+{
+	MenuFrameSemaphore_ImageAvailable = 0,
+	MenuFrameSemaphore_ImGuiRenderFinished = 1,	
+	MenuFrameSemaphore_FIRST_STAGE = MenuFrameSemaphore_ImageAvailable,
+	MenuFrameSemaphore_LAST_STAGE = MenuFrameSemaphore_ImGuiRenderFinished,	
+	MenuFrameSemaphore_COUNT = MenuFrameSemaphore_LAST_STAGE + 1
+};
+
+inline static bool menu = true;

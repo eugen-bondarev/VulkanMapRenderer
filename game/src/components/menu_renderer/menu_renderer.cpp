@@ -1,4 +1,4 @@
-#include "ui_renderer.h"
+#include "menu_renderer.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
@@ -9,19 +9,19 @@
 
 using namespace Engine;
 
-UIRenderer::UIRenderer()
+MenuRenderer::MenuRenderer()
 {
 	renderPass = new Vk::RenderPass(
 		{ Vk::Util::CreateAttachment(
 			Vk::Global::swapChain->GetImageFormat(), 
 
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 
-			// VK_IMAGE_LAYOUT_UNDEFINED, 
+			// VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 
+			VK_IMAGE_LAYOUT_UNDEFINED, 
 
 			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
 
-			VK_ATTACHMENT_LOAD_OP_LOAD, 
-			// VK_ATTACHMENT_LOAD_OP_CLEAR, 
+			// VK_ATTACHMENT_LOAD_OP_LOAD, 
+			VK_ATTACHMENT_LOAD_OP_CLEAR, 
 
 			VK_ATTACHMENT_STORE_OP_STORE
 		) }
@@ -66,10 +66,10 @@ UIRenderer::UIRenderer()
 		commandBuffers.push_back(new Vk::CommandBuffer(commandPool));
 	}
 
-	// Vk::Global::swapChain->InitFramebuffers(renderPass->GetVkRenderPass());
+	Vk::Global::swapChain->InitFramebuffers(renderPass->GetVkRenderPass());
 }
 
-UIRenderer::~UIRenderer()
+MenuRenderer::~MenuRenderer()
 {
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
@@ -84,15 +84,15 @@ UIRenderer::~UIRenderer()
 	delete renderPass;	
 }
 
-void UIRenderer::Render(Engine::Vk::Frame* frame)
+void MenuRenderer::Render(Engine::Vk::Frame* frame)
 {
 	VT_PROFILER_SCOPE();
 
-	VkSemaphore* wait = &frame->GetSemaphore(FrameSemaphore_MapRenderFinished);
-	VkSemaphore* signal = &frame->GetSemaphore(FrameSemaphore_ImGuiRenderFinished);
+	// VkSemaphore* wait = &frame->GetSemaphore(FrameSemaphore_MapRenderFinished);
+	// VkSemaphore* signal = &frame->GetSemaphore(FrameSemaphore_ImGuiRenderFinished);
 
-	// VkSemaphore* wait = &frame->GetSemaphore(MenuFrameSemaphore_ImageAvailable);
-	// VkSemaphore* signal = &frame->GetSemaphore(MenuFrameSemaphore_ImGuiRenderFinished);
+	VkSemaphore* wait = &frame->GetSemaphore(MenuFrameSemaphore_ImageAvailable);
+	VkSemaphore* signal = &frame->GetSemaphore(MenuFrameSemaphore_ImGuiRenderFinished);
 
 	Vk::CommandPool* pool = commandPools[Vk::Global::swapChain->GetCurrentImageIndex()];
 	Vk::CommandBuffer* cmd = commandBuffers[Vk::Global::swapChain->GetCurrentImageIndex()];
@@ -114,5 +114,6 @@ void UIRenderer::Render(Engine::Vk::Frame* frame)
 
 	VkFence fence = frame->GetInFlightFence();
 
-	cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal);
+	vkResetFences(Vk::Global::device->GetVkDevice(), 1, &fence);
+	cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal, fence);
 }

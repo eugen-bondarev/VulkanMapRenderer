@@ -22,7 +22,10 @@ struct Entity
 	virtual ~Entity()
 	{
 		for (auto& component : components)
+		{
+			Collections::RemoveFromCollection(component);
 			delete component;
+		}
 	}
 
 	template <typename T, typename... Args>
@@ -47,6 +50,31 @@ struct Entity
 		return nullptr;
 	}
 
+	void RemoveComponent(Component* component)
+	{
+		for (int i = 0; i < components.size(); i++)
+		{
+			if (components[i] == component)
+			{
+				// Removing from entity's component list
+				{
+					Engine::Util::Vector::RemoveAt(components, i);
+				}
+
+				// Removing from a collection (if there is one containing it)
+				{
+					Collections::RemoveFromCollection(component);
+				}
+
+				{
+					delete component;
+				}
+				
+				break;
+			}
+		}
+	}
+
 	template <typename T>
 	void RemoveComponent()
 	{
@@ -54,27 +82,7 @@ struct Entity
 
 		if (component)
 		{
-			for (int i = 0; i < components.size(); i++)
-			{
-				if (components[i] == component)
-				{
-					// Removing from entity's component list
-					{
-						Engine::Util::Vector::RemoveAt(components, i);
-					}
-
-					// Removing from a collection (if there is one containing it)
-					{
-						Collections::RemoveFromCollection(component);
-					}
-
-					{
-						delete component;
-					}
-					
-					break;
-				}
-			}
+			RemoveComponent(component);
 		}
 	}
 };

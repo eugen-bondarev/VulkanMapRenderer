@@ -23,6 +23,8 @@
 #include "util/system/cpu.h"
 #include "util/math/math.h"
 
+#define VT_DISABLE_TRACE
+
 #ifdef NDEBUG
 #	define VT_RELEASE
 #else
@@ -39,26 +41,30 @@
 #	define VT_LOG_OUT(...)			VT_VOID_ASSEMBLY
 #endif
 
-#if !defined(VT_DISABLE_LOG_OUT) && !defined(VT_DISABLE_CONSOLE_OUT)
+#if !defined(VT_DISABLE_ERR_OUT) && !defined(VT_DISABLE_CONSOLE_OUT)
 #	define VT_ERR_OUT(...)			spdlog::error(__VA_ARGS__)
 #else
 #	define VT_ERR_OUT(...)			VT_VOID_ASSEMBLY
 #endif
 
-#if !defined(VT_DISABLE_LOG_OUT) && !defined(VT_DISABLE_CONSOLE_OUT)
+#if !defined(VT_DISABLE_WARN_OUT) && !defined(VT_DISABLE_CONSOLE_OUT)
 #	define VT_WARN_OUT(...)			spdlog::warn(__VA_ARGS__)
 #else
 #	define VT_WARN_OUT(...)			VT_VOID_ASSEMBLY
 #endif
 
-#if !defined(VT_DISABLE_LOG_OUT) && !defined(VT_DISABLE_CONSOLE_OUT)
+#if !defined(VT_DISABLE_VAR_OUT) && !defined(VT_DISABLE_CONSOLE_OUT)
 #	define VT_VAR_OUT(VAR)			spdlog::info(#VAR ": {0}", VAR)
 #else
 #	define VT_VAR_OUT(VAR)			VT_VOID_ASSEMBLY
 #endif
 
 #ifdef VT_DEBUG
-#	define VT_TRACE()				VT_LOG_OUT("[Call]: " + std::string(__func__))
+#	if !defined(VT_DISABLE_TRACE)
+#		define VT_TRACE()				VT_LOG_OUT("[Call]: " + std::string(__func__))
+#	else
+#		define VT_TRACE()				VT_VOID_ASSEMBLY
+#	endif
 
 #	define VT_THROW(...)			\
 	VT_ERR_OUT(__VA_ARGS__);		\

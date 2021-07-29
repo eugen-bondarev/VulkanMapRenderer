@@ -13,7 +13,8 @@ public:
 
 private:
 	std::shared_ptr<State> state;
-	Vk::FrameManager* frameManager;
+	Vk::FrameManager* gameFrameManager;
+	Vk::FrameManager* menuFrameManager;
 };
 
 App* ::Engine::GetApp()

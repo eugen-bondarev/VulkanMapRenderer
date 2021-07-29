@@ -8,6 +8,8 @@
 
 #include "components/ui_renderer/ui_renderer.h"
 
+#include "components/menu_renderer/menu_renderer.h"
+
 class State
 {
 public:
@@ -22,6 +24,9 @@ public:
 	MapRenderer* mapRenderer;
 
 	UIRenderer* uiRenderer;
+
+	Entity* menuEntity;
+	MenuRenderer* menuRenderer;
 
 private:
 	State(const State&) = delete;

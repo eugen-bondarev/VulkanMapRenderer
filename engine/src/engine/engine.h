@@ -4,6 +4,8 @@
 #include "assets/text_asset.h"
 #include "assets/image_asset.h"
 
+#include "tasks/tasks.h"
+
 #include "core/window/window.h"
 #include "core/entry.h"
 

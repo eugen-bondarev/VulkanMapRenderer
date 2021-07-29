@@ -94,7 +94,11 @@ namespace Engine
 			}
 
 			void SwapChain::InitFramebuffers(VkRenderPass& render_pass)
-			{				
+			{
+				for (auto& framebuffer : framebuffers)
+					delete framebuffer;
+				framebuffers.clear();
+
 				glm::vec2 viewport_size = { extent.width, extent.height };
 				for (const VkImageView& image_view : Vk::Global::swapChain->GetImageViews())
 					framebuffers.push_back(new Vk::Framebuffer(image_view, render_pass, viewport_size));

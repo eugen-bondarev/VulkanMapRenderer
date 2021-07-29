@@ -6,6 +6,7 @@
 #include "window/time.h"
 #include "graphics/vk/vk.h"
 #include "../assets/assets.h"
+#include "../tasks/tasks.h"
 
 #define ENTRY()														\
 int main(int amount_of_arguments, char* arguments[])				\
@@ -20,6 +21,7 @@ int main(int amount_of_arguments, char* arguments[])				\
 	while (!window->ShouldClose())									\
 	{																\
 		Time::BeginMeasurement();									\
+		Tasks::ExecuteStack();\
 		glfwPollEvents();											\
 		app->Update();												\
 		Time::EndMeasurement();										\
