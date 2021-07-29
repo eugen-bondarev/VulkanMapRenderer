@@ -28,7 +28,6 @@ public:
 		glm::ivec2 end;
 	} visibleChunks, lastVisibleChunks;
 
-public:
 	Map(Camera* camera);
 	~Map();
 

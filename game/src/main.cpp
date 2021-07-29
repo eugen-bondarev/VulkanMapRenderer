@@ -16,11 +16,13 @@ void NaturaForge::Update()
 
 	frameManager->AcquireSwapChainImage();
 
-		UI_PUSH(
-			ImGui::Begin("Info");
-				ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-			ImGui::End();
-		);
+		UI_START();
+
+		ImGui::Begin("Info");
+			ImGui::Text("FPS: %i", static_cast<int>(ImGui::GetIO().Framerate));
+		ImGui::End();
+
+		UI_END();
 		
 		Collections::IOnUpdate::UpdateAll();
 		Collections::IRenderable::RenderAll(frameManager->GetCurrentFrame());

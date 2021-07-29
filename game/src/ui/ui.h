@@ -11,6 +11,13 @@ namespace UI
 	void ExecuteStack();
 }
 
+#define UI_START()\
+	::UI::Push([&]() { (void(0))
+
+#define UI_END()\
+	})
+	
+
 #define UI_PUSH(x)\
 	::UI::Push([&]()\
 	{\

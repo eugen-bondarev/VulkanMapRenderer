@@ -18,7 +18,7 @@ struct Settings
 	float bias1 = 0.0f;
 } static settings;
 
-BlockType WhatBlockType(float noise_value, TilePos tile_pos)
+inline BlockType WhatBlockType(float noise_value, TilePos tile_pos)
 {
 	BlockType type = BlockType::Empty;
 
@@ -94,7 +94,7 @@ void Map::DetermineDimensionsInBlocks()
 	VT_VAR_OUT(dimensions.x * dimensions.y);
 }
 
-void Map::Async_PopulateBlocks(int start, int end)
+inline void Map::Async_PopulateBlocks(int start, int end)
 {
 	static int height_variation = 5000;
 	static int horizon = 0;
@@ -175,7 +175,7 @@ void Map::PopulateBlocks()
 		std::execution::par, 
 		std::begin(intervals), 
 		std::end(intervals), 
-		[&](glm::vec2& interval) 
+		[&](const glm::vec2& interval) 
 		{
 			Async_PopulateBlocks(interval.x, interval.y);
 		}

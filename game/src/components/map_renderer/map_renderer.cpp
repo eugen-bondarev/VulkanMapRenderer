@@ -244,21 +244,24 @@ void MapRenderer::Render(Vk::Frame* frame)
 	VkSemaphore* signal = &frame->GetSemaphore(FrameSemaphore_MapRenderFinished);
 
 	VkFence fence = frame->GetInFlightFence();
-	Vk::CommandBuffer* cmd = GetCurrentCmdBuffer();
 
 	if (updateCmdBuffers)
 	{
 		VT_PROFILER_NAMED_SCOPE("Overwrite cmd buffers");
 
-		Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetCurrentScreenFramebuffer();
-		Vk::CommandPool* pool = GetCurrentCmdPool();
+		for (int i = 0; i < commandBuffers.size(); i++)
+		{
+			Vk::Framebuffer* framebuffer = Vk::Global::swapChain->GetFramebuffers()[i];
+			Vk::CommandPool* pool = commandPools[i];
+			Vk::CommandBuffer* cmd = commandBuffers[i];
 
-		pool->Reset();
-			cmd->Begin();
-				colorPass->WriteToCmd(cmd, walls_to_render.size(), blocks_to_render.size());
-				lightPass->WriteToCmd(cmd, lights_to_render.size());
-				composition->WriteToCmd(cmd, framebuffer);
-			cmd->End();
+			pool->Reset();
+				cmd->Begin();
+					colorPass->WriteToCmd(cmd, walls_to_render.size(), blocks_to_render.size());
+					lightPass->WriteToCmd(cmd, lights_to_render.size());
+					composition->WriteToCmd(cmd, framebuffer);
+				cmd->End();
+		}
 
 		updateCmdBuffers = false;
 	}
@@ -266,7 +269,7 @@ void MapRenderer::Render(Vk::Frame* frame)
 	VT_PROFILER_SCOPE();
 
 	vkResetFences(Vk::Global::device->GetVkDevice(), 1, &fence);
-	cmd->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal, fence);
+	GetCurrentCmdBuffer()->SubmitToQueue(Vk::Global::Queues::graphicsQueue, wait, signal, fence);
 }
 
 Engine::Vk::CommandPool* MapRenderer::GetCurrentCmdPool()
