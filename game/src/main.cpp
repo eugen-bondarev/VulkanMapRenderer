@@ -27,6 +27,8 @@ void NaturaForge::Init()
 		MenuFrameSemaphore_COUNT, 
 		2
 	);
+
+	Programs::TextEditor::Init();
 }
 
 void NaturaForge::Update()
@@ -40,48 +42,9 @@ void NaturaForge::Update()
 	if (menu)
 	{
 		UI_START();
-			ImGui::Begin("Menu");
-				if (ImGui::Button("Start game") || true)
-				{
-					VT_TASK_START();
-						Vk::Global::device->WaitIdle();
+		
+			Programs::TextEditor::Render();
 
-						delete state->menuEntity;
-						
-						state->mapEntity = new Entity();
-						state->uiEntity = new Entity();
-						
-						state->camera = state->mapEntity->AddComponent<Camera>();
-						state->map = state->mapEntity->AddComponent<Map>(state->camera);
-						state->mapRenderer = state->mapEntity->AddComponent<MapRenderer>(state->camera, state->map);
-
-						state->uiRenderer = state->uiEntity->AddComponent<UIRenderer>();
-
-						// auto& tile_map_texture = state->mapRenderer->colorPass->block.tileMap;
-
-						// imGuiTextureID = ImGui_ImplVulkan_AddTexture(
-						// 	Vk::Global::constantInterpolationSampler->GetVkSampler(),
-						// 	tile_map_texture->GetImageView()->GetVkImageView(), 
-						// 	tile_map_texture->GetImageView()->GetDescriptor().imageLayout 
-						// );
-
-						// Programs::MapEditor::InitData init_data;
-						// BlocksTileMap* texture_2d = state->mapRenderer->colorPass->block.tileMap.get();
-						// init_data.texture = texture_2d;
-						// init_data.textureSize = texture_2d->GetSize();
-						// init_data.tileSize = texture_2d->GetTileSize().x;
-						
-						// Programs::MapEditor::Init(init_data);
-						Programs::TextEditor::Init();
-
-						menu = false;
-					VT_TASK_END();
-				}
-				if (ImGui::Button("Exit"))
-				{
-					window->Close();
-				}
-			ImGui::End();
 		UI_END();
 	}
 	else
