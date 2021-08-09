@@ -30,6 +30,7 @@ public:
 	Engine::Vk::CommandBuffer* GetCurrentCmdBuffer();
 
 	void UpdateCmdBuffers();
+	Offscreen::ColorPass* colorPass;
 
 private:
 	Map* map;
@@ -43,7 +44,6 @@ private:
 
 	std::vector<Engine::Vk::CommandPool*> commandPools;
 	std::vector<Engine::Vk::CommandBuffer*> commandBuffers;
-	Offscreen::ColorPass* colorPass;
 	Offscreen::LightPass* lightPass;
 	Composition* composition;
 

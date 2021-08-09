@@ -4,6 +4,8 @@
 
 #include <engine/engine.h>
 
+#include "imgui/imgui.h"
+
 Camera::Camera()
 {
 	CalculateTransformMatrix();
@@ -47,6 +49,8 @@ void Camera::Update()
 	}
 	
 	static float speed = 1500.0f;
+
+	if (ImGui::GetIO().WantCaptureKeyboard) return;
 
 	if (glfwGetKey(Engine::window->GetGLFWWindow(), GLFW_KEY_W))
 	{

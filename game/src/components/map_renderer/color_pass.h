@@ -27,6 +27,13 @@ namespace Offscreen
 		void UpdateWalls(const std::vector<glm::vec4>& render_data);
 		void UpdateSpace();
 
+		struct 
+		{
+			std::shared_ptr<Engine::Vk::Buffer> vertexBuffer;
+			std::shared_ptr<Engine::Vk::Buffer> indexBuffer;
+			std::shared_ptr<BlocksTileMap> tileMap;
+		} block;
+
 	private:
 		Map* map;
 		Camera* camera;
@@ -37,13 +44,6 @@ namespace Offscreen
 
 		std::shared_ptr<Engine::Vk::DescriptorSetLayout> descriptorSetLayout;
 		std::shared_ptr<Engine::Vk::DescriptorSet> descriptorSet;
-
-		struct 
-		{
-			std::shared_ptr<Engine::Vk::Buffer> vertexBuffer;
-			std::shared_ptr<Engine::Vk::Buffer> indexBuffer;
-			std::shared_ptr<BlocksTileMap> tileMap;
-		} block;
 
 		struct
 		{

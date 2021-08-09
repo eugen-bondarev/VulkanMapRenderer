@@ -30,5 +30,10 @@ namespace Engine
 		{
 			return imageView;
 		}
+
+		glm::vec2 Texture2D::GetSize() const
+		{
+			return size;
+		}
 	}
 }

@@ -3,6 +3,12 @@
 #include "ui/ui.h"
 #include "sync/sync.h"
 #include "imgui/imgui.h"
+#include "imgui/imgui_impl_vulkan.h"
+
+#include "programs/map_editor.h"
+#include "programs/text_editor.h"
+
+ImTextureID imGuiTextureID;
 
 void NaturaForge::Init()
 {
@@ -27,14 +33,15 @@ void NaturaForge::Update()
 {
 	VT_PROFILER_SCOPE();
 
+	Vk::FrameManager* frame_manager = menu ? menuFrameManager : gameFrameManager;
+
+	frame_manager->AcquireSwapChainImage();
+
 	if (menu)
 	{
-		menuFrameManager->AcquireSwapChainImage();
-
-			UI_START();
-
+		UI_START();
 			ImGui::Begin("Menu");
-				if (ImGui::Button("Start game"))
+				if (ImGui::Button("Start game") || true)
 				{
 					VT_TASK_START();
 						Vk::Global::device->WaitIdle();
@@ -50,6 +57,23 @@ void NaturaForge::Update()
 
 						state->uiRenderer = state->uiEntity->AddComponent<UIRenderer>();
 
+						// auto& tile_map_texture = state->mapRenderer->colorPass->block.tileMap;
+
+						// imGuiTextureID = ImGui_ImplVulkan_AddTexture(
+						// 	Vk::Global::constantInterpolationSampler->GetVkSampler(),
+						// 	tile_map_texture->GetImageView()->GetVkImageView(), 
+						// 	tile_map_texture->GetImageView()->GetDescriptor().imageLayout 
+						// );
+
+						// Programs::MapEditor::InitData init_data;
+						// BlocksTileMap* texture_2d = state->mapRenderer->colorPass->block.tileMap.get();
+						// init_data.texture = texture_2d;
+						// init_data.textureSize = texture_2d->GetSize();
+						// init_data.tileSize = texture_2d->GetTileSize().x;
+						
+						// Programs::MapEditor::Init(init_data);
+						Programs::TextEditor::Init();
+
 						menu = false;
 					VT_TASK_END();
 				}
@@ -58,31 +82,24 @@ void NaturaForge::Update()
 					window->Close();
 				}
 			ImGui::End();
-
-			UI_END();
-			
-			Collections::IOnUpdate::UpdateAll();
-			Collections::IRenderable::RenderAll(menuFrameManager->GetCurrentFrame());
-		
-		menuFrameManager->Present();
+		UI_END();
 	}
 	else
 	{
-		gameFrameManager->AcquireSwapChainImage();
-
-			UI_START();
-
+		UI_START();
 			ImGui::Begin("Info");
 				ImGui::Text("FPS: %i", static_cast<int>(ImGui::GetIO().Framerate));
 			ImGui::End();
-
-			UI_END();
 			
-			Collections::IOnUpdate::UpdateAll();
-			Collections::IRenderable::RenderAll(gameFrameManager->GetCurrentFrame());
-		
-		gameFrameManager->Present();
+			// Programs::MapEditor::Render();
+			Programs::TextEditor::Render();
+		UI_END();		
 	}
+	
+	Collections::IOnUpdate::UpdateAll();
+	Collections::IRenderable::RenderAll(frame_manager->GetCurrentFrame());
+
+	frame_manager->Present();
 }
 
 void NaturaForge::Shutdown()
